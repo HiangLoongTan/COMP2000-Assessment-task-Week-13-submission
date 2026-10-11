@@ -67,7 +67,7 @@ public class SimulationPanel extends JPanel {
                 Elements element = sandbox.grid[row][col];
 
                 if (element != null) {
-
+                    
                     g.setColor(element.getColor());
 
                     g.fillRect(
