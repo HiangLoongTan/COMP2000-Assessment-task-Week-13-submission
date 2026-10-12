@@ -1,5 +1,6 @@
 import java.awt.Color;
 
+
 public class Elements {
     boolean moveable;
     boolean canBurn;

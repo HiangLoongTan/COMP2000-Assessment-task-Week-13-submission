@@ -1,4 +1,20 @@
+import java.awt.Color;
+import java.util.function.Predicate;
+import java.util.function.Function;
+
 public class Sandbox {
+
+    // Checks whether an element is a dead fire particle
+    Predicate<Fire> deadFire = Fire::isDead;
+
+    // Checks whether an element falls down
+    Predicate<Elements> falling = Elements::fallsDown;
+
+    // Checks whether an element floats up
+    Predicate<Elements> floating = Elements::floatsUp;
+
+    // Converts an element into its colour
+    Function<Elements, Color> elementColor = Elements::getColor;
 
     static int WIDTH = 800;
     static int HEIGHT = 600;
@@ -19,7 +35,7 @@ public class Sandbox {
 
     int frameCounter = 0;
 
-    public boolean isEmpty(int row, int col) { //checks if the square is on the grid
+    public boolean isEmpty(int row, int col) { // checks if the square is on the grid
         if (row < 0 || row >= ROWS || col < 0 || col >= COLS) {
             return false; // this position is outside of the grid and treated as not empty
         }
@@ -54,10 +70,12 @@ public class Sandbox {
 
     public void step() {
         frameCounter++;
-                // Remove fire that has burnt out, otherwise it stays in the grid and piles up
+        // Remove fire that has burnt out, otherwise it stays in the grid and piles up
         for (int row = 0; row < ROWS; row++) {
             for (int col = 0; col < COLS; col++) {
-                if (grid[row][col] instanceof Fire && ((Fire) grid[row][col]).isDead()) {
+                Elements e = grid[row][col];
+
+                if (e instanceof Fire fire && deadFire.test(fire)) {
                     grid[row][col] = null;
                 }
             }
@@ -66,17 +84,20 @@ public class Sandbox {
         for (int row = ROWS - 2; row >= 0; row--) {
             for (int col = 0; col < COLS; col++) {
                 Elements e = grid[row][col];
-                if (e != null && e.fallsDown()) {
+
+                if (e != null && falling.test(e)) {
                     e.step(this, row, col);
                 }
             }
         }
 
+        //Reverse Gravity - frameCounter exists as the pixels insta-teleport to the top otherwise
         if (frameCounter % 2 == 0) {
             for (int row = 1; row < ROWS; row++) {
                 for (int col = 0; col < COLS; col++) {
                     Elements e = grid[row][col];
-                    if (e != null && e.floatsUp()) {
+
+                    if (e != null && floating.test(e)) {
                         e.step(this, row, col);
                     }
                 }
@@ -85,51 +106,28 @@ public class Sandbox {
     }
 
     public void side_gravity(int row, int col) {
-        if (Math.random() < 0.5) {
-            // Try down-left
-            if (col > 0 && grid[row + 1][col - 1] == null) {
-                grid[row + 1][col - 1] = grid[row][col];
-                grid[row][col] = null;
-            }
-            // If left is blocked, try down-right
-            else if (col < COLS - 1 && grid[row + 1][col + 1] == null) {
-                grid[row + 1][col + 1] = grid[row][col];
-                grid[row][col] = null;
-            }
-        } else {
-            // Try down-right
-            if (col < COLS - 1 && grid[row + 1][col + 1] == null) {
-                grid[row + 1][col + 1] = grid[row][col];
-                grid[row][col] = null;
-            }
-            // If right is blocked, try down-left
-            else if (col > 0 && grid[row + 1][col - 1] == null) {
-
-                grid[row + 1][col - 1] = grid[row][col];
-                grid[row][col] = null;
-            }
+        int direction = Math.random() < 0.5 ? -1 : 1;
+        if (col + direction >= 0 && col + direction < COLS
+                && grid[row + 1][col + direction] == null) {
+            grid[row + 1][col + direction] = grid[row][col];
+            grid[row][col] = null;
+        } else if (col - direction >= 0 && col - direction < COLS
+                && grid[row + 1][col - direction] == null) {
+            grid[row + 1][col - direction] = grid[row][col];
+            grid[row][col] = null;
         }
     }
 
-    // Reverse gravity:
-    // 50% chance left, 50% chance right
     public void reverse_side_gravity(int row, int col) {
-        if (Math.random() < 0.5) {
-            if (col > 0 && grid[row - 1][col - 1] == null) {
-                grid[row - 1][col - 1] = grid[row][col];
-                grid[row][col] = null;
-            } else if (col < COLS - 1 && grid[row - 1][col + 1] == null) {
-                grid[row - 1][col + 1] = grid[row][col];
-                grid[row][col] = null;
-            }
-        } else {
-            if (col < COLS - 1 && grid[row - 1][col + 1] == null) {
-                grid[row - 1][col + 1] = grid[row][col];
-                grid[row][col] = null;
-            } else if (col > 0 && grid[row - 1][col - 1] == null) {
-                grid[row - 1][col - 1] = grid[row][col];
-                grid[row][col] = null;
-            }
+        int direction = Math.random() < 0.5 ? -1 : 1;
+        if (col + direction >= 0 && col + direction < COLS
+                && grid[row][col + direction] == null) {
+            grid[row][col + direction] = grid[row][col];
+            grid[row][col] = null;
+        } else if (col - direction >= 0 && col - direction < COLS
+                && grid[row][col - direction] == null) {
+            grid[row][col - direction] = grid[row][col];
+            grid[row][col] = null;
         }
     }
 

@@ -15,8 +15,6 @@ public class UI extends JFrame {
                 this.sandbox = sandbox;
 
 
-
-
                 // Frame Creation
                 setTitle("COMP2000 Project");
                 setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
