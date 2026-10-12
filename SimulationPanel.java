@@ -4,9 +4,9 @@ import javax.swing.*;
 
 public class SimulationPanel extends JPanel {
 
-    Sandbox sandbox;
+    Physics sandbox;
 
-    public SimulationPanel(Sandbox sandbox) {
+    public SimulationPanel(Physics sandbox) {
         this.sandbox = sandbox;
 
         // Converting mouse to pixels and allows us to spawn our material
@@ -14,13 +14,13 @@ public class SimulationPanel extends JPanel {
 
             void place(MouseEvent e) {
 
-                int col = e.getX() / Sandbox.CELL_SIZE;
-                int row = e.getY() / Sandbox.CELL_SIZE;
+                int col = e.getX() / Physics.CELL_SIZE;
+                int row = e.getY() / Physics.CELL_SIZE;
 
                 // Collision detection to ensure that we cant click outside of the simulated
                 // enviroment/grid
-                if (row >= 0 && row < Sandbox.ROWS &&
-                        col >= 0 && col < Sandbox.COLS) {
+                if (row >= 0 && row < Physics.ROWS &&
+                        col >= 0 && col < Physics.COLS) {
 
                                         Elements selected = sandbox.tester.get();
 
@@ -59,10 +59,10 @@ public class SimulationPanel extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
-        int s = Sandbox.CELL_SIZE;
+        int s = Physics.CELL_SIZE;
 
-        for (int row = 0; row < Sandbox.ROWS; row++) {
-            for (int col = 0; col < Sandbox.COLS; col++) {
+        for (int row = 0; row < Physics.ROWS; row++) {
+            for (int col = 0; col < Physics.COLS; col++) {
 
                 Elements element = sandbox.grid[row][col];
 

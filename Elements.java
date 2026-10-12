@@ -1,6 +1,5 @@
 import java.awt.Color;
 
-
 public class Elements {
     boolean moveable;
     boolean canBurn;
@@ -26,11 +25,11 @@ public class Elements {
         return false;
     }
 
-    public void step(Sandbox sandbox, int row, int col) {
+    public void step(Physics sandbox, int row, int col) {
         // Default: stay still (Fire).
     }
 
-    protected void fallDown(Sandbox sandbox, int row, int col) { //This method is about one particle, in this row and this column
+    protected void fallDown(Physics sandbox, int row, int col) { //This method is about one particle, in this row and this column
         
         int below = row + 1;
         if (sandbox.isEmpty(below, col)) { //If the particle below us is empty then we move down.
@@ -48,7 +47,7 @@ public class Elements {
         }
     }
 
-    protected void floatUp(Sandbox sandbox, int row, int col) { // This method is about one particle, in this row and this column. Gases use it to go up.
+    protected void floatUp(Physics sandbox, int row, int col) { // This method is about one particle, in this row and this column. Gases use it to go up.
         if (Math.random() < 0.6) { // 60% of the time we dont go straight, but drift apart
             try { // try and move this particle diagonally above
                 sandbox.reverse_side_gravity(row, col);
@@ -79,7 +78,7 @@ class Sand extends Elements {
     }
 
     @Override
-    public void step(Sandbox sandbox, int row, int col) {
+    public void step(Physics sandbox, int row, int col) {
         fallDown(sandbox, row, col);
     }
 }
@@ -95,7 +94,7 @@ class Water extends Elements {
     }
 
     @Override
-    public void step(Sandbox sandbox, int row, int col) {
+    public void step(Physics sandbox, int row, int col) {
         fallDown(sandbox, row, col);
     }
 }
@@ -129,7 +128,7 @@ class Fire extends Elements {
     }
 
     @Override
-    public void step(Sandbox sandbox, int row, int col) {
+    public void step(Physics sandbox, int row, int col) {
         floatUp(sandbox, row, col);
     }
 
@@ -167,7 +166,7 @@ class Gas extends Elements {
     }
 
     @Override
-    public void step(Sandbox sandbox, int row, int col) {
+    public void step(Physics sandbox, int row, int col) {
         floatUp(sandbox, row, col);
     }
 }

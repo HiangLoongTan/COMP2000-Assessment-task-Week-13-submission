@@ -1,8 +1,9 @@
 import java.awt.Color;
 import java.util.function.Predicate;
+import java.util.Arrays;
 import java.util.function.Function;
 
-public class Sandbox {
+public class Physics {
 
     // Checks whether an element is a dead fire particle
     Predicate<Fire> deadFire = Fire::isDead;
@@ -27,51 +28,13 @@ public class Sandbox {
 
     Tester<Elements> tester = new Tester<>();
 
-    public Sandbox() {
+    public Physics() {
         tester.set(new Sand());
         grid = new Elements[ROWS][COLS];
         grid[20][40] = tester.get();
     }
 
     int frameCounter = 0;
-
-    public void step() {
-        frameCounter++;
-        // Remove fire that has burnt out, otherwise it stays in the grid and piles up
-        for (int row = 0; row < ROWS; row++) {
-            for (int col = 0; col < COLS; col++) {
-                Elements e = grid[row][col];
-
-                if (e instanceof Fire fire && deadFire.test(fire)) {
-                    grid[row][col] = null;
-                }
-            }
-        }
-
-        for (int row = ROWS - 2; row >= 0; row--) {
-            for (int col = 0; col < COLS; col++) {
-                Elements e = grid[row][col];
-
-                if (e != null && falling.test(e)) {
-                    e.step(this, row, col);
-                }
-            }
-        }
-
-        // Reverse Gravity - frameCounter exists as the pixels insta-teleport to the top
-        // otherwise
-        if (frameCounter % 2 == 0) {
-            for (int row = 1; row < ROWS; row++) {
-                for (int col = 0; col < COLS; col++) {
-                    Elements e = grid[row][col];
-
-                    if (e != null && floating.test(e)) {
-                        e.step(this, row, col);
-                    }
-                }
-            }
-        }
-    }
 
     public boolean isEmpty(int row, int col) { // checks if the square is on the grid
         if (row < 0 || row >= ROWS || col < 0 || col >= COLS) {
@@ -106,6 +69,34 @@ public class Sandbox {
         grid[row][col] = null;
     }
 
+    public void step() {
+        frameCounter++;
+        FireStep();
+
+        for (int row = ROWS - 2; row >= 0; row--) {
+            for (int col = 0; col < COLS; col++) {
+                Elements e = grid[row][col];
+
+                if (e != null && falling.test(e)) {
+                    e.step(this, row, col);
+                }
+            }
+        }
+
+        // Reverse Gravity - frameCounter exists as the pixels insta-teleport to the top
+        // otherwise
+        if (frameCounter % 2 == 0) {
+            for (int row = 1; row < ROWS; row++) {
+                for (int col = 0; col < COLS; col++) {
+                    Elements e = grid[row][col];
+
+                    if (e != null && floating.test(e)) {
+                        e.step(this, row, col);
+                    }
+                }
+            }
+        }
+    }
 
     public void side_gravity(int row, int col) {
         int direction = Math.random() < 0.5 ? -1 : 1;
@@ -124,24 +115,41 @@ public class Sandbox {
         int direction = Math.random() < 0.5 ? -1 : 1;
         // Try moving diagonally upwards
         if (col + direction >= 0 && col + direction < COLS
-            && grid[row - 1][col + direction] == null) {
-                grid[row - 1][col + direction] = grid[row][col];
-                grid[row][col] = null;
-        // Try the opposite diagonal
+                && grid[row - 1][col + direction] == null) {
+            grid[row - 1][col + direction] = grid[row][col];
+            grid[row][col] = null;
+            // Try the opposite diagonal
         } else if (col - direction >= 0 && col - direction < COLS
-            && grid[row - 1][col - direction] == null) {
-                grid[row - 1][col - direction] = grid[row][col];
-                grid[row][col] = null;
-        // Otherwise, try moving horizontally
+                && grid[row - 1][col - direction] == null) {
+            grid[row - 1][col - direction] = grid[row][col];
+            grid[row][col] = null;
+            // Otherwise, try moving horizontally
         } else if (col + direction >= 0 && col + direction < COLS
-            && grid[row][col + direction] == null) {
-                grid[row][col + direction] = grid[row][col];
-                grid[row][col] = null;
+                && grid[row][col + direction] == null) {
+            grid[row][col + direction] = grid[row][col];
+            grid[row][col] = null;
         } else if (col - direction >= 0 && col - direction < COLS
-            && grid[row][col - direction] == null) {
-                grid[row][col - direction] = grid[row][col];
-                grid[row][col] = null;
+                && grid[row][col - direction] == null) {
+            grid[row][col - direction] = grid[row][col];
+            grid[row][col] = null;
         }
+    }
+
+    public void FireStep() {
+        // Remove fire that has burnt out
+        Arrays.stream(grid)
+                .map(Arrays::stream)
+                .filter(e -> e instanceof Fire fire && deadFire.test(fire))
+                .forEach(e -> {
+                    // Find and remove the dead fire from the grid
+                    for (int row = 0; row < ROWS; row++) {
+                        for (int col = 0; col < COLS; col++) {
+                            if (grid[row][col] == e) {
+                                grid[row][col] = null;
+                            }
+                        }
+                    }
+                });
     }
 
     // Generic tester class

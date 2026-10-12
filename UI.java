@@ -7,11 +7,11 @@ public class UI extends JFrame {
 
         //Private prevents other classes from directly 
         //accessing the sandbox variable inside UI.
-        private Sandbox sandbox;
+        private Physics sandbox;
 
 
         //Now the UI class is hiding its internal data
-        public UI(int width, int height, Sandbox sandbox) {
+        public UI(int width, int height, Physics sandbox) {
                 this.sandbox = sandbox;
 
 
@@ -43,8 +43,8 @@ public class UI extends JFrame {
                 JPanel simPanel = new SimulationPanel(sandbox);
 
                 simPanel.setPreferredSize(new Dimension(
-                                Sandbox.WIDTH,
-                                Sandbox.HEIGHT));
+                                Physics.WIDTH,
+                                Physics.HEIGHT));
 
                 simPanel.setBackground(Color.DARK_GRAY);
 
@@ -96,8 +96,8 @@ public class UI extends JFrame {
                 leftPanel.add(bottomPanel, BorderLayout.CENTER);
 
                 setSize(
-                                Sandbox.WIDTH + 150,
-                                Sandbox.HEIGHT + 150);
+                                Physics.WIDTH + 150,
+                                Physics.HEIGHT + 150);
 
                 setLocationRelativeTo(null);
                 setVisible(true);
