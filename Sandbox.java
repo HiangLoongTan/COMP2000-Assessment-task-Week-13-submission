@@ -35,6 +35,44 @@ public class Sandbox {
 
     int frameCounter = 0;
 
+    public void step() {
+        frameCounter++;
+        // Remove fire that has burnt out, otherwise it stays in the grid and piles up
+        for (int row = 0; row < ROWS; row++) {
+            for (int col = 0; col < COLS; col++) {
+                Elements e = grid[row][col];
+
+                if (e instanceof Fire fire && deadFire.test(fire)) {
+                    grid[row][col] = null;
+                }
+            }
+        }
+
+        for (int row = ROWS - 2; row >= 0; row--) {
+            for (int col = 0; col < COLS; col++) {
+                Elements e = grid[row][col];
+
+                if (e != null && falling.test(e)) {
+                    e.step(this, row, col);
+                }
+            }
+        }
+
+        // Reverse Gravity - frameCounter exists as the pixels insta-teleport to the top
+        // otherwise
+        if (frameCounter % 2 == 0) {
+            for (int row = 1; row < ROWS; row++) {
+                for (int col = 0; col < COLS; col++) {
+                    Elements e = grid[row][col];
+
+                    if (e != null && floating.test(e)) {
+                        e.step(this, row, col);
+                    }
+                }
+            }
+        }
+    }
+
     public boolean isEmpty(int row, int col) { // checks if the square is on the grid
         if (row < 0 || row >= ROWS || col < 0 || col >= COLS) {
             return false; // this position is outside of the grid and treated as not empty
@@ -68,42 +106,6 @@ public class Sandbox {
         grid[row][col] = null;
     }
 
-    public void step() {
-        frameCounter++;
-        // Remove fire that has burnt out, otherwise it stays in the grid and piles up
-        for (int row = 0; row < ROWS; row++) {
-            for (int col = 0; col < COLS; col++) {
-                Elements e = grid[row][col];
-
-                if (e instanceof Fire fire && deadFire.test(fire)) {
-                    grid[row][col] = null;
-                }
-            }
-        }
-
-        for (int row = ROWS - 2; row >= 0; row--) {
-            for (int col = 0; col < COLS; col++) {
-                Elements e = grid[row][col];
-
-                if (e != null && falling.test(e)) {
-                    e.step(this, row, col);
-                }
-            }
-        }
-
-        //Reverse Gravity - frameCounter exists as the pixels insta-teleport to the top otherwise
-        if (frameCounter % 2 == 0) {
-            for (int row = 1; row < ROWS; row++) {
-                for (int col = 0; col < COLS; col++) {
-                    Elements e = grid[row][col];
-
-                    if (e != null && floating.test(e)) {
-                        e.step(this, row, col);
-                    }
-                }
-            }
-        }
-    }
 
     public void side_gravity(int row, int col) {
         int direction = Math.random() < 0.5 ? -1 : 1;
@@ -120,14 +122,25 @@ public class Sandbox {
 
     public void reverse_side_gravity(int row, int col) {
         int direction = Math.random() < 0.5 ? -1 : 1;
+        // Try moving diagonally upwards
         if (col + direction >= 0 && col + direction < COLS
-                && grid[row][col + direction] == null) {
-            grid[row][col + direction] = grid[row][col];
-            grid[row][col] = null;
+            && grid[row - 1][col + direction] == null) {
+                grid[row - 1][col + direction] = grid[row][col];
+                grid[row][col] = null;
+        // Try the opposite diagonal
         } else if (col - direction >= 0 && col - direction < COLS
-                && grid[row][col - direction] == null) {
-            grid[row][col - direction] = grid[row][col];
-            grid[row][col] = null;
+            && grid[row - 1][col - direction] == null) {
+                grid[row - 1][col - direction] = grid[row][col];
+                grid[row][col] = null;
+        // Otherwise, try moving horizontally
+        } else if (col + direction >= 0 && col + direction < COLS
+            && grid[row][col + direction] == null) {
+                grid[row][col + direction] = grid[row][col];
+                grid[row][col] = null;
+        } else if (col - direction >= 0 && col - direction < COLS
+            && grid[row][col - direction] == null) {
+                grid[row][col - direction] = grid[row][col];
+                grid[row][col] = null;
         }
     }
 
