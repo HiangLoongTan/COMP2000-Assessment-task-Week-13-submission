@@ -135,7 +135,7 @@ public class Physics {
         }
     }
 
-    public void FireStep() {
+    public void FireStep() {                                                                    //BUG - FIRE IS NOT ACTUALLY DELETED
         // Remove fire that has burnt out
         Arrays.stream(grid)
                 .map(Arrays::stream)
