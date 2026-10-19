@@ -85,9 +85,16 @@ public class Physics {
 
         // Reverse Gravity - frameCounter exists as the pixels insta-teleport to the top
         // otherwise
+
         if (frameCounter % 2 == 0) {
             for (int row = 1; row < ROWS; row++) {
-                for (int col = 0; col < COLS; col++) {
+
+                // Randomise scan direction for each row
+                boolean leftToRight = Math.random() < 0.5;
+
+                for (int i = 0; i < COLS; i++) {
+                    int col = leftToRight ? i : COLS - 1 - i;
+
                     Elements e = grid[row][col];
 
                     if (e != null && floating.test(e)) {
@@ -113,18 +120,8 @@ public class Physics {
 
     public void reverse_side_gravity(int row, int col) {
         int direction = Math.random() < 0.5 ? -1 : 1;
-        // Try moving diagonally upwards
+        // Otherwise, try moving horizontally
         if (col + direction >= 0 && col + direction < COLS
-                && grid[row - 1][col + direction] == null) {
-            grid[row - 1][col + direction] = grid[row][col];
-            grid[row][col] = null;
-            // Try the opposite diagonal
-        } else if (col - direction >= 0 && col - direction < COLS
-                && grid[row - 1][col - direction] == null) {
-            grid[row - 1][col - direction] = grid[row][col];
-            grid[row][col] = null;
-            // Otherwise, try moving horizontally
-        } else if (col + direction >= 0 && col + direction < COLS
                 && grid[row][col + direction] == null) {
             grid[row][col + direction] = grid[row][col];
             grid[row][col] = null;
