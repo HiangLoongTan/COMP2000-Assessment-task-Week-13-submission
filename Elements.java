@@ -95,7 +95,34 @@ class Water extends Elements {
 
     @Override
     public void step(Physics sandbox, int row, int col) {
-        fallDown(sandbox, row, col);
+        int below = row + 1; // the cell directly below
+
+        if (sandbox.isEmpty(below, col)) { // empty below, so fall straight down
+            fallDown(sandbox, row, col);
+            return; // already moved, don't also slide this frame
+        }
+
+        sandbox.side_gravity(row, col); // below is blocked, so try down-left or down-right
+
+        if (sandbox.grid[row][col] == null) { // diagonal move worked, this cell is now empty
+            return;
+        }
+
+        boolean tryRight = sandbox.frameCounter % 2 == 0; // even tick go right, odd tick go left
+        int side;
+        if (tryRight) {
+            side = col + 1; // column to the right
+        } else {
+            side = col - 1; // column to the left
+        }
+
+        if (sandbox.isEmpty(row, side)) { // that neighbour on the same row is empty
+            try {
+                sandbox.moveElement(row, col, row, side); // slide this water into it
+            } catch (Exception e) { // move was refused, so print why instead of crashing
+                System.out.println("Water flow error: " + e.getMessage());
+            }
+        }
     }
 }
 
