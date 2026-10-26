@@ -51,9 +51,9 @@ public class Physics {
 
     public boolean isEmpty(int row, int col) { // checks if the square is on the grid
         if (row < 0 || row >= ROWS || col < 0 || col >= COLS) {
-            return false; // this position is outside of the grid and treated as not empty
+            return false;
         }
-        return grid[row][col] == null; // this cell has no element and is treated as empty
+        return grid[row][col] == null;
     }
 
     // Checks that a position is inside the grid
@@ -69,11 +69,9 @@ public class Physics {
         // Check both positions
         checkPosition(row, col);
         checkPosition(newRow, newCol);
-        // Check that there is actually an element to move
         if (grid[row][col] == null) {
             throw new Exception("Cannot move an empty cell.");
         }
-        // Check that the destination is empty
         if (grid[newRow][newCol] != null) {
             throw new Exception("Cannot move element into an occupied cell.");
         }
@@ -173,11 +171,9 @@ public class Physics {
             return;
         }
 
-        // Water-specific movement
         if (grid[row][col] instanceof Water) {
             int direction = Math.random() < 0.5 ? -1 : 1;
 
-            // Step 2: Try to flow diagonally down
             for (int dir : new int[] { direction, -direction }) {
                 if (isEmpty(row + 1, col + dir)) {
                     try {
@@ -189,7 +185,6 @@ public class Physics {
                 }
             }
 
-            // Step 3: Try to spread sideways
             for (int dir : new int[] { direction, -direction }) {
                 if (isEmpty(row, col + dir)) {
                     try {
@@ -278,7 +273,6 @@ public class Physics {
                 .map(Arrays::stream)
                 .filter(e -> e instanceof Fire fire && deadFire.test(fire))
                 .forEach(e -> {
-                    // Find and remove the dead fire from the grid
                     for (int row = 0; row < ROWS; row++) {
                         for (int col = 0; col < COLS; col++) {
                             if (grid[row][col] == e) {
