@@ -40,13 +40,12 @@ public class Physics {
     private boolean reverseOrder = false;
 
     public Map<String, Long> countPixelsByType() {
-    return Arrays.stream(grid)
-            .flatMap(Arrays::stream)
-            .filter(e -> e != null)
-            .collect(Collectors.groupingBy(
-                    e -> e.getClass().getSimpleName(),
-                    Collectors.counting()
-            ));
+        return Arrays.stream(grid)
+                .flatMap(Arrays::stream)
+                .filter(e -> e != null)
+                .collect(Collectors.groupingBy(
+                        e -> e.getClass().getSimpleName(),
+                        Collectors.counting()));
     }
 
     public boolean isEmpty(int row, int col) { // checks if the square is on the grid
@@ -78,6 +77,14 @@ public class Physics {
         // Move element
         grid[newRow][newCol] = grid[row][col];
         grid[row][col] = null;
+    }
+
+    public void clearGrid() {
+        for (int row = 0; row < ROWS; row++) {
+            for (int col = 0; col < COLS; col++) {
+                grid[row][col] = null;
+            }
+        }
     }
 
     public void step() {
