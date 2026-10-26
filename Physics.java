@@ -135,6 +135,7 @@ public class Physics {
                 } else if (e != null && falling.test(e)) {
                     e.step(this, row, col);
                 }
+
             }
         }
 
@@ -297,7 +298,7 @@ public class Physics {
                     moveElement(row, col, row, newCol);
                     return;
                 } catch (Exception e) {
-                    System.out.println(e.getMessage());
+                    System.out.println("Water sideways error: " + e.getMessage());
                 }
             }
         }
