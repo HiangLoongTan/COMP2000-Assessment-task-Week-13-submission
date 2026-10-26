@@ -5,6 +5,9 @@ import java.util.stream.IntStream;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class Physics {
 
@@ -31,6 +34,9 @@ public class Physics {
 
     Tester<Elements> tester = new Tester<>();
 
+    private ScheduledExecutorService simulationExecutor;
+    private static final int TICKS_PER_SECOND = 60;
+
     public Physics() {
         tester.set(new Sand());
         grid = new Elements[ROWS][COLS];
@@ -40,13 +46,35 @@ public class Physics {
     int frameCounter = 0;
     private boolean reverseOrder = false;
 
-    public Map<String, Long> countPixelsByType() {
+    public synchronized Map<String, Long> countPixelsByType() {
         return Arrays.stream(grid)
                 .flatMap(Arrays::stream)
                 .filter(e -> e != null)
                 .collect(Collectors.groupingBy(
                         e -> e.getClass().getSimpleName(),
                         Collectors.counting()));
+    }
+
+    public void startSimulation(Runnable onTick) {
+        if (simulationExecutor != null && !simulationExecutor.isShutdown()) {
+            return;
+        }
+
+        simulationExecutor = Executors.newSingleThreadScheduledExecutor();
+
+        long tickDuration = 1_000_000_000L / TICKS_PER_SECOND;
+
+        simulationExecutor.scheduleAtFixedRate(() -> {
+            step();
+            onTick.run();
+        }, 0, tickDuration, TimeUnit.NANOSECONDS);
+    }
+
+    public void stopSimulation() {
+        if (simulationExecutor != null) {
+            simulationExecutor.shutdownNow();
+            simulationExecutor = null;
+        }
     }
 
     public boolean isEmpty(int row, int col) { // checks if the square is on the grid
@@ -80,7 +108,7 @@ public class Physics {
         grid[row][col] = null;
     }
 
-    public void clearGrid() {
+    public synchronized void clearGrid() {
         for (int row = 0; row < ROWS; row++) {
             for (int col = 0; col < COLS; col++) {
                 grid[row][col] = null;
@@ -88,7 +116,7 @@ public class Physics {
         }
     }
 
-    public void step() {
+    public synchronized void step() {
         frameCounter++;
         FireStep();
 
