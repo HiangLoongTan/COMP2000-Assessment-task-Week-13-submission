@@ -112,6 +112,42 @@ class Fire extends Elements {
     }
 }
 
+class Explosion extends Fire {
+    private static final Color[] BLAST = {
+        new Color(255, 255, 235),
+        new Color(255, 235, 140),
+        new Color(255, 190, 70),
+        new Color(255, 120, 20)
+    };
+
+    private static final long BLAST_LIFETIME = 600;
+    private final long explodedAt = System.currentTimeMillis();
+
+    @Override
+    public boolean isDead() {
+        return System.currentTimeMillis() - explodedAt >= BLAST_LIFETIME;
+    }
+
+    @Override
+    public Color getColor() {
+        long age = System.currentTimeMillis() - explodedAt;
+        Color flash = BLAST[(int) (Math.random() * BLAST.length)];
+
+        if (age < BLAST_LIFETIME / 2) {
+            return flash;
+        }
+
+        float f = (age - BLAST_LIFETIME / 2) / (BLAST_LIFETIME / 2f);
+        f = Math.min(f, 1f);
+
+        return new Color(
+            (int) (flash.getRed() + f * (90 - flash.getRed())),
+            (int) (flash.getGreen() + f * (30 - flash.getGreen())),
+            (int) (flash.getBlue() + f * (10 - flash.getBlue()))
+        );
+    }
+}
+
 class Gas extends Elements {
     public Gas() {
         super(false, true, Color.WHITE, true);
