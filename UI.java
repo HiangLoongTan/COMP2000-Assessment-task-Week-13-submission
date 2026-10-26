@@ -117,12 +117,16 @@ public class UI extends JFrame {
         fireButton.addActionListener(e -> sandbox.tester.set(new Fire()));
         JButton gasButton = createButton("Gas", new Color(120, 130, 145));
         gasButton.addActionListener(e -> sandbox.tester.set(new Gas()));
+        JButton clearButton = new JButton("ClearGrid");
+        clearButton.addActionListener(e -> {sandbox.clearGrid();});
 
         // Add Buttons to Bottom Bar
+
         bottomPanel.add(sandButton);
         bottomPanel.add(waterButton);
         bottomPanel.add(fireButton);
         bottomPanel.add(gasButton);
+        bottomPanel.add(clearButton);
 
         leftPanel.add(bottomPanel, BorderLayout.SOUTH);
 
