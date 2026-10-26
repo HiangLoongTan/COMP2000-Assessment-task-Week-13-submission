@@ -6,7 +6,8 @@ public class Elements {
     Color color;
     boolean reverseGravity;
 
-    public Elements(boolean moveable, boolean canBurn, Color color, boolean reverseGravity) {
+    public Elements(boolean moveable, boolean canBurn,
+                    Color color, boolean reverseGravity) {
         this.moveable = moveable;
         this.canBurn = canBurn;
         this.color = color;
@@ -25,45 +26,8 @@ public class Elements {
         return false;
     }
 
-    public void step(Physics sandbox, int row, int col) {
-        // Default: stay still (Fire).
-    }
-
-    protected void fallDown(Physics sandbox, int row, int col) { //This method is about one particle, in this row and this column
-        
-        int below = row + 1;
-        if (sandbox.isEmpty(below, col)) { //If the particle below us is empty then we move down.
-            
-            try {
-                // we ask sandbox to move the particle from its current position to the one below it.
-                // this will empty the pixel in its current position and fill the one below it.
-                sandbox.moveElement(row, col, below, col);
-            } catch (Exception e) { // move element might refuse
-                System.out.println("Gravity error: " + e.getMessage());
-                // we catch it so the entire program doesnt crash, rather we just print the reason.
-            }
-        } else { // the square beneath ISNT empty so we remain in place and try to move the particle to the side.
-            sandbox.side_gravity(row, col);
-        }
-    }
-
-    protected void floatUp(Physics sandbox, int row, int col) { // This method is about one particle, in this row and this column. Gases use it to go up.
-        if (Math.random() < 0.6) { // 60% of the time we dont go straight, but drift apart
-            try { // try and move this particle diagonally above
-                sandbox.reverse_side_gravity(row, col);
-            } catch (Exception e) { // move wasnt allowed so we print the reason.
-                System.out.println("Reverse side gravity error: " + e.getMessage());
-            }
-        } else {
-            int above = row - 1;
-            if (sandbox.isEmpty(above, col)) {
-                try { // try and move this particle up.
-                    sandbox.moveElement(row, col, above, col);
-                } catch (Exception e) { // move element might refuse
-                    System.out.println("Reverse gravity error: " + e.getMessage());
-                }
-            }
-        }
+    public void step(Physics physics, int row, int col) {
+        // Default: stay still.
     }
 }
 
@@ -78,8 +42,8 @@ class Sand extends Elements {
     }
 
     @Override
-    public void step(Physics sandbox, int row, int col) {
-        fallDown(sandbox, row, col);
+    public void step(Physics physics, int row, int col) {
+        physics.fallDown(row, col);
     }
 }
 
@@ -94,27 +58,24 @@ class Water extends Elements {
     }
 
     @Override
-    public void step(Physics sandbox, int row, int col) {
-        fallDown(sandbox, row, col);
+    public void step(Physics physics, int row, int col) {
+        physics.fallDown(row, col);
     }
 }
 
 class Fire extends Elements {
-
     private static final Color[] FLAMES = {
-        new Color(255, 240, 180), // white hot
-        new Color(255, 190, 60),  // yellow
-        new Color(255, 140, 20),  // orange
-        new Color(230, 80, 10),   // deep orange
-        new Color(180, 35, 0)     // red
+        new Color(255, 240, 180),
+        new Color(255, 190, 60),
+        new Color(255, 140, 20),
+        new Color(230, 80, 10),
+        new Color(180, 35, 0)
     };
 
     private static final long LIFETIME = 3400;
-
     private final long bornAt = System.currentTimeMillis();
 
     public Fire() {
-        // reverseGravity = true -> fire rises like a real flame instead of piling up like sand
         super(false, true, Color.ORANGE, true);
     }
 
@@ -128,8 +89,8 @@ class Fire extends Elements {
     }
 
     @Override
-    public void step(Physics sandbox, int row, int col) {
-        floatUp(sandbox, row, col);
+    public void step(Physics physics, int row, int col) {
+        physics.floatUp(row, col);
     }
 
     @Override
@@ -142,13 +103,14 @@ class Fire extends Elements {
 
         Color flame = FLAMES[(int) (Math.random() * FLAMES.length)];
 
-        // fade out over the last second of its life
         if (age > LIFETIME - 1000) {
             float f = (age - (LIFETIME - 1000)) / 1000f;
+
             return new Color(
                 (int) (flame.getRed() + f * (64 - flame.getRed())),
                 (int) (flame.getGreen() + f * (64 - flame.getGreen())),
-                (int) (flame.getBlue() + f * (64 - flame.getBlue())));
+                (int) (flame.getBlue() + f * (64 - flame.getBlue()))
+            );
         }
 
         return flame;
@@ -166,7 +128,7 @@ class Gas extends Elements {
     }
 
     @Override
-    public void step(Physics sandbox, int row, int col) {
-        floatUp(sandbox, row, col);
+    public void step(Physics physics, int row, int col) {
+        physics.floatUp(row, col);
     }
 }

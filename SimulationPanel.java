@@ -47,8 +47,13 @@ public class SimulationPanel extends JPanel {
 
         // Simulation Timer
         Timer timer = new Timer(16, e -> {
-            sandbox.step();
-            repaint();
+            try{
+                sandbox.step();
+                repaint();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+
         });
 
         timer.start();

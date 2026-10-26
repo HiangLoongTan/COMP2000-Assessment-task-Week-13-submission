@@ -1,6 +1,8 @@
 import java.awt.Color;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.function.Function;
 
 public class Physics {
@@ -35,6 +37,17 @@ public class Physics {
     }
 
     int frameCounter = 0;
+    private boolean reverseOrder = false;
+
+    public Map<String, Long> countPixelsByType() {
+    return Arrays.stream(grid)
+            .flatMap(Arrays::stream)
+            .filter(e -> e != null)
+            .collect(Collectors.groupingBy(
+                    e -> e.getClass().getSimpleName(),
+                    Collectors.counting()
+            ));
+    }
 
     public boolean isEmpty(int row, int col) { // checks if the square is on the grid
         if (row < 0 || row >= ROWS || col < 0 || col >= COLS) {
@@ -73,27 +86,29 @@ public class Physics {
         frameCounter++;
         FireStep();
 
-        for (int row = ROWS - 2; row >= 0; row--) {
-            for (int col = 0; col < COLS; col++) {
+        // Normal gravity
+        for (int row = ROWS - 1; row >= 0; row--) {
+            for (int i = 0; i < COLS; i++) {
+                int col = reverseOrder ? COLS - 1 - i : i;
+
                 Elements e = grid[row][col];
 
-                if (e != null && falling.test(e)) {
+                if (e instanceof Water) {
+                    if (!fallStraightDown(row, col)
+                            && !flowDiagonally(row, col)) {
+                        spreadSideways(row, col);
+                    }
+                } else if (e != null && falling.test(e)) {
                     e.step(this, row, col);
                 }
             }
         }
 
-        // Reverse Gravity - frameCounter exists as the pixels insta-teleport to the top
-        // otherwise
-
+        // Reverse gravity
         if (frameCounter % 2 == 0) {
             for (int row = 1; row < ROWS; row++) {
-
-                // Randomise scan direction for each row
-                boolean leftToRight = Math.random() < 0.5;
-
                 for (int i = 0; i < COLS; i++) {
-                    int col = leftToRight ? i : COLS - 1 - i;
+                    int col = reverseOrder ? COLS - 1 - i : i;
 
                     Elements e = grid[row][col];
 
@@ -103,16 +118,30 @@ public class Physics {
                 }
             }
         }
+
+        // Alternate scan direction each frame
+        reverseOrder = !reverseOrder;
     }
 
     public void side_gravity(int row, int col) {
+        // There is no space below the bottom row
+        if (row + 1 >= ROWS) {
+            return;
+        }
+
         int direction = Math.random() < 0.5 ? -1 : 1;
+
+        // Try the first diagonal direction
         if (col + direction >= 0 && col + direction < COLS
                 && grid[row + 1][col + direction] == null) {
+
             grid[row + 1][col + direction] = grid[row][col];
             grid[row][col] = null;
+
+            // Try the opposite diagonal direction
         } else if (col - direction >= 0 && col - direction < COLS
                 && grid[row + 1][col - direction] == null) {
+
             grid[row + 1][col - direction] = grid[row][col];
             grid[row][col] = null;
         }
@@ -132,7 +161,118 @@ public class Physics {
         }
     }
 
-    public void FireStep() {                                                                    //BUG - FIRE IS NOT ACTUALLY DELETED
+    // Normal gravity: particles fall down or diagonally.
+    public void fallDown(int row, int col) {
+        // Step 1: Try to fall straight down
+        if (isEmpty(row + 1, col)) {
+            try {
+                moveElement(row, col, row + 1, col);
+            } catch (Exception e) {
+                System.out.println("Gravity error: " + e.getMessage());
+            }
+            return;
+        }
+
+        // Water-specific movement
+        if (grid[row][col] instanceof Water) {
+            int direction = Math.random() < 0.5 ? -1 : 1;
+
+            // Step 2: Try to flow diagonally down
+            for (int dir : new int[] { direction, -direction }) {
+                if (isEmpty(row + 1, col + dir)) {
+                    try {
+                        moveElement(row, col, row + 1, col + dir);
+                    } catch (Exception e) {
+                        System.out.println("Water diagonal error: " + e.getMessage());
+                    }
+                    return;
+                }
+            }
+
+            // Step 3: Try to spread sideways
+            for (int dir : new int[] { direction, -direction }) {
+                if (isEmpty(row, col + dir)) {
+                    try {
+                        moveElement(row, col, row, col + dir);
+                    } catch (Exception e) {
+                        System.out.println("Water sideways error: " + e.getMessage());
+                    }
+                    return;
+                }
+            }
+        } else {
+            // Normal gravity for sand and other falling elements
+            side_gravity(row, col);
+        }
+    }
+
+    // Reverse gravity: particles float up or drift sideways.
+    public void floatUp(int row, int col) {
+        if (Math.random() < 0.6) {
+            reverse_side_gravity(row, col);
+        } else {
+            int above = row - 1;
+
+            if (isEmpty(above, col)) {
+                try {
+                    moveElement(row, col, above, col);
+                } catch (Exception e) {
+                    System.out.println("Reverse gravity error: " + e.getMessage());
+                }
+            }
+        }
+    }
+
+    private boolean fallStraightDown(int row, int col) {
+        if (isEmpty(row + 1, col)) {
+            try {
+                moveElement(row, col, row + 1, col);
+                return true;
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
+        }
+
+        return false;
+    }
+
+    private boolean flowDiagonally(int row, int col) {
+        int direction = Math.random() < 0.5 ? -1 : 1;
+
+        for (int dir : new int[] { direction, -direction }) {
+            int newCol = col + dir;
+
+            if (isEmpty(row + 1, newCol)) {
+                try {
+                    moveElement(row, col, row + 1, newCol);
+                    return true;
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private void spreadSideways(int row, int col) {
+        int direction = Math.random() < 0.5 ? -1 : 1;
+
+        for (int dir : new int[] { direction, -direction }) {
+            int newCol = col + dir;
+
+            if (isEmpty(row, newCol)) {
+                try {
+                    moveElement(row, col, row, newCol);
+                    return;
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                }
+            }
+        }
+    }
+
+    public void FireStep() { // BUG - FIRE IS NOT ACTUALLY DELETED
         // Remove fire that has burnt out
         Arrays.stream(grid)
                 .map(Arrays::stream)
