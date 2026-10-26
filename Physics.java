@@ -1,6 +1,7 @@
 import java.awt.Color;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.function.Function;
@@ -274,20 +275,14 @@ public class Physics {
         }
     }
 
-    public void FireStep() { // BUG - FIRE IS NOT ACTUALLY DELETED
-        // Remove fire that has burnt out
-        Arrays.stream(grid)
-                .map(Arrays::stream)
-                .filter(e -> e instanceof Fire fire && deadFire.test(fire))
-                .forEach(e -> {
-                    for (int row = 0; row < ROWS; row++) {
-                        for (int col = 0; col < COLS; col++) {
-                            if (grid[row][col] == e) {
-                                grid[row][col] = null;
-                            }
-                        }
-                    }
-                });
+    public void FireStep() {
+        IntStream.range(0, ROWS)
+                .boxed()
+                .flatMap(row -> IntStream.range(0, COLS)
+                        .mapToObj(col -> new int[] { row, col }))
+                .filter(pos -> grid[pos[0]][pos[1]] instanceof Fire fire
+                        && deadFire.test(fire))
+                .forEach(pos -> grid[pos[0]][pos[1]] = null);
     }
 
     // Generic tester class
