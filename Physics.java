@@ -40,7 +40,6 @@ public class Physics {
     public Physics() {
         tester.set(new Sand());
         grid = new Elements[ROWS][COLS];
-        grid[20][40] = tester.get();
     }
 
     int frameCounter = 0;
