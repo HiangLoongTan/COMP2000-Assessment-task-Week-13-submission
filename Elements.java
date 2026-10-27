@@ -68,7 +68,7 @@ class Fire extends Elements {
     };
 
     private static final long LIFETIME = 3400;
-    private final long bornAt = System.currentTimeMillis();
+    private final long bornAt = System.currentTimeMillis(); 
 
     public Fire() {
         super(false, true, Color.ORANGE, true);
@@ -89,10 +89,10 @@ class Fire extends Elements {
     }
 
     @Override
-    public Color getColor() {
-        long age = System.currentTimeMillis() - bornAt;
+    public Color getColor() { 
+        long age = System.currentTimeMillis() - bornAt; 
 
-        if (age >= LIFETIME) {
+        if (age >= LIFETIME) { 
             return Color.DARK_GRAY;
         }
 
@@ -112,38 +112,38 @@ class Fire extends Elements {
     }
 }
 
-class Explosion extends Fire {
-    private static final Color[] BLAST = {
+class Explosion extends Fire { //Explosions are very short livedd, so they chain and clean up the fire
+    private static final Color[] BLAST = { // it flashes colours from white to orange
         new Color(255, 255, 235),
         new Color(255, 235, 140),
         new Color(255, 190, 70),
         new Color(255, 120, 20)
     };
 
-    private static final long BLAST_LIFETIME = 600;
-    private final long explodedAt = System.currentTimeMillis();
+    private static final long BLAST_LIFETIME = 600; // the lifetime of an explosion
+    private final long explodedAt = System.currentTimeMillis(); // the time/moment the explosion gets created
 
     @Override
-    public boolean isDead() {
+    public boolean isDead() { // Firestep calls this to know when to remove the pixels due to the explosion
         return System.currentTimeMillis() - explodedAt >= BLAST_LIFETIME;
     }
 
     @Override
     public Color getColor() {
-        long age = System.currentTimeMillis() - explodedAt;
-        Color flash = BLAST[(int) (Math.random() * BLAST.length)];
+        long age = System.currentTimeMillis() - explodedAt; // how old this explosion is, in milliseconds
+        Color flash = BLAST[(int) (Math.random() * BLAST.length)]; // picks a random flash colour, which makes it flicker
 
-        if (age < BLAST_LIFETIME / 2) {
-            return flash;
+        if (age < BLAST_LIFETIME / 2) { // first half of its life
+            return flash; // full bright flash/no fading
         }
 
-        float f = (age - BLAST_LIFETIME / 2) / (BLAST_LIFETIME / 2f);
-        f = Math.min(f, 1f);
+        float f = (age - BLAST_LIFETIME / 2) / (BLAST_LIFETIME / 2f); // second half of its life
+        f = Math.min(f, 1f); // never goes above 1, so the colour stops fading at the end
 
-        return new Color(
-            (int) (flash.getRed() + f * (90 - flash.getRed())),
-            (int) (flash.getGreen() + f * (30 - flash.getGreen())),
-            (int) (flash.getBlue() + f * (10 - flash.getBlue()))
+        return new Color( // the blending from a flash colour towards a dark red brown colour
+            (int) (flash.getRed() + f * (90 - flash.getRed())), // red moves toward 90
+            (int) (flash.getGreen() + f * (30 - flash.getGreen())), // green moves toward 30
+            (int) (flash.getBlue() + f * (10 - flash.getBlue())) // blue moves toward 10
         );
     }
 }
