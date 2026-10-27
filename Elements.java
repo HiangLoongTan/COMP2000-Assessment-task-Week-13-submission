@@ -56,38 +56,6 @@ class Water extends Elements {
     public boolean fallsDown() {
         return true;
     }
-
-    @Override
-    public void step(Physics sandbox, int row, int col) {
-        int below = row + 1; // the cell directly below
-
-        if (sandbox.isEmpty(below, col)) { // empty below, so fall straight down
-            fallDown(sandbox, row, col);
-            return; // already moved, don't also slide this frame
-        }
-
-        sandbox.side_gravity(row, col); // below is blocked, so try down-left or down-right
-
-        if (sandbox.grid[row][col] == null) { // diagonal move worked, this cell is now empty
-            return;
-        }
-
-        boolean tryRight = sandbox.frameCounter % 2 == 0; // even tick go right, odd tick go left
-        int side;
-        if (tryRight) {
-            side = col + 1; // column to the right
-        } else {
-            side = col - 1; // column to the left
-        }
-
-        if (sandbox.isEmpty(row, side)) { // that neighbour on the same row is empty
-            try {
-                sandbox.moveElement(row, col, row, side); // slide this water into it
-            } catch (Exception e) { // move was refused, so print why instead of crashing
-                System.out.println("Water flow error: " + e.getMessage());
-            }
-        }
-    }
 }
 
 class Fire extends Elements {
@@ -100,7 +68,7 @@ class Fire extends Elements {
     };
 
     private static final long LIFETIME = 3400;
-    private final long bornAt = System.currentTimeMillis();
+    private final long bornAt = System.currentTimeMillis(); 
 
     public Fire() {
         super(false, true, Color.ORANGE, true);
@@ -121,10 +89,10 @@ class Fire extends Elements {
     }
 
     @Override
-    public Color getColor() {
-        long age = System.currentTimeMillis() - bornAt;
+    public Color getColor() { 
+        long age = System.currentTimeMillis() - bornAt; 
 
-        if (age >= LIFETIME) {
+        if (age >= LIFETIME) { 
             return Color.DARK_GRAY;
         }
 
@@ -141,6 +109,42 @@ class Fire extends Elements {
         }
 
         return flame;
+    }
+}
+
+class Explosion extends Fire { //Explosions are very short livedd, so they chain and clean up the fire
+    private static final Color[] BLAST = { // it flashes colours from white to orange
+        new Color(255, 255, 235),
+        new Color(255, 235, 140),
+        new Color(255, 190, 70),
+        new Color(255, 120, 20)
+    };
+
+    private static final long BLAST_LIFETIME = 600; // the lifetime of an explosion
+    private final long explodedAt = System.currentTimeMillis(); // the time/moment the explosion gets created
+
+    @Override
+    public boolean isDead() { // Firestep calls this to know when to remove the pixels due to the explosion
+        return System.currentTimeMillis() - explodedAt >= BLAST_LIFETIME;
+    }
+
+    @Override
+    public Color getColor() {
+        long age = System.currentTimeMillis() - explodedAt; // how old this explosion is, in milliseconds
+        Color flash = BLAST[(int) (Math.random() * BLAST.length)]; // picks a random flash colour, which makes it flicker
+
+        if (age < BLAST_LIFETIME / 2) { // first half of its life
+            return flash; // full bright flash/no fading
+        }
+
+        float f = (age - BLAST_LIFETIME / 2) / (BLAST_LIFETIME / 2f); // second half of its life
+        f = Math.min(f, 1f); // never goes above 1, so the colour stops fading at the end
+
+        return new Color( // the blending from a flash colour towards a dark red brown colour
+            (int) (flash.getRed() + f * (90 - flash.getRed())), // red moves toward 90
+            (int) (flash.getGreen() + f * (30 - flash.getGreen())), // green moves toward 30
+            (int) (flash.getBlue() + f * (10 - flash.getBlue())) // blue moves toward 10
+        );
     }
 }
 
