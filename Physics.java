@@ -7,12 +7,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 public class Physics {
+
+    List<Reaction> reactions = List.of( // every rule in the simulation, checked in this order
+            new Reaction(e -> e instanceof Fire, e -> e instanceof Gas, 0.25, Explosion::new), // fire next to gas, 25% chance each frame to explode
+            new Reaction(e -> e instanceof Explosion, e -> e instanceof Gas, 0.9, Explosion::new)); // explosion next to gas, 90% chance, so the blast spreads fast
 
     // Checks whether an element is a dead fire particle
     Predicate<Fire> deadFire = Fire::isDead;
@@ -123,6 +129,7 @@ public class Physics {
     public synchronized void step() {
         frameCounter++;
         FireStep();
+        reactionStep();
 
         // Normal gravity
         for (int row = ROWS - 1; row >= 0; row--) {
@@ -343,6 +350,33 @@ public class Physics {
                         result -> result[1] == 0
                                 ? 0.0
                                 : (double) result[0] / result[1]));
+    }
+
+    public Stream<Elements> neighbours(int row, int col) { // gives back the elements touching the cell at this row and column
+       
+        return IntStream.rangeClosed(-1, 1)  // We start a stream of numbers, offsets for the rows        
+                .boxed() // we turn the numbers into objects so flatmap is usable
+                .flatMap(dRow -> IntStream.rangeClosed(-1, 1)  // we get every positon around the cell through flatmap, using each row offset and each column asset
+                // getting all 9 position positions around the cell
+                        .mapToObj(dCol -> new int[] { row + dRow, col + dCol })) // turns the offsets into real rows and columns
+                .filter(pos -> !(pos[0] == row && pos[1] == col)) // removes the cell itself, it isn't its own neighbour
+                .filter(pos -> pos[0] >= 0 && pos[0] < ROWS // Does this spot actually exist on the grid ?
+                        && pos[1] >= 0 && pos[1] < COLS)
+                .map(pos -> grid[pos[0]][pos[1]])  // What is actually in that spot ?
+                .filter(Objects::nonNull); // Is there nothing in that spot at all ?
+    }
+
+    public void reactionStep() { // checks every rule against every cell on the grid
+        for (Reaction reaction : reactions) {           // we check through each rule, one at a time (which rule am i checking ?)
+            List<int[]> reacting = IntStream.range(0, ROWS) // where do I keep the cells th
+                    .boxed() // Can I turn these plain numbers into objects ?
+                    .flatMap(row -> IntStream.range(0, COLS) // we find what the columns are for this row
+                            .mapToObj(col -> new int[] { row, col })) // we find the exact position of each cell
+                    .filter(pos -> reaction.matches(this, pos[0], pos[1])) // we ask, does the cell at this position react to with something?
+                    .collect(Collectors.toList()); // saves the cells that said yes in the reacting list
+
+            reacting.forEach(pos -> grid[pos[0]][pos[1]] = reaction.produce()); // Now i know who reacts to what, so what do they become ?
+        }
     }
 
     // Generic tester class
