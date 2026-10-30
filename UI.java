@@ -46,6 +46,8 @@ public class UI extends JFrame {
         simPanel.setPreferredSize(new Dimension(Physics.WIDTH, Physics.HEIGHT));
         simPanel.setBackground(Color.DARK_GRAY);
 
+        sandbox.startSimulation(simPanel::repaint);
+
         simWrapper.add(simPanel);
         leftPanel.add(simWrapper, BorderLayout.CENTER);
 
@@ -69,12 +71,15 @@ public class UI extends JFrame {
         JLabel fireCount = createCountLabel("Fire: 0");
         JLabel gasCount = createCountLabel("Gas: 0");
         JLabel totalCount = createCountLabel("Total: 0");
+        JLabel lifespanLabel = new JLabel("Average Fire Lifespan: 0.00 s");
+        lifespanLabel.setForeground(TEXT);
 
         sidePanel.add(sandCount);
         sidePanel.add(waterCount);
         sidePanel.add(fireCount);
         sidePanel.add(gasCount);
         sidePanel.add(totalCount);
+        sidePanel.add(lifespanLabel);
 
         // Add Sidebar to Main Layout
         mainPanel.add(sidePanel, BorderLayout.EAST);
@@ -87,13 +92,19 @@ public class UI extends JFrame {
             long water = counts.getOrDefault("Water", 0L);
             long fire = counts.getOrDefault("Fire", 0L);
             long gas = counts.getOrDefault("Gas", 0L);
+            double averageLifespan = sandbox.averageFireLifespan() / 1000.0;
 
             sandCount.setText("Sand: " + sand);
             waterCount.setText("Water: " + water);
             fireCount.setText("Fire: " + fire);
             gasCount.setText("Gas: " + gas);
-
             totalCount.setText("Total: " + (sand + water + fire + gas));
+
+            lifespanLabel.setText(
+                String.format(
+                    "Average Fire Lifespan: %.2f s", averageLifespan
+                )
+            );
         });
 
         counterTimer.start();

@@ -7,7 +7,7 @@ public class Elements {
     boolean reverseGravity;
 
     public Elements(boolean moveable, boolean canBurn,
-                    Color color, boolean reverseGravity) {
+            Color color, boolean reverseGravity) {
         this.moveable = moveable;
         this.canBurn = canBurn;
         this.color = color;
@@ -61,11 +61,6 @@ class Water extends Elements {
     public void step(Physics sandbox, int row, int col) {
         int below = row + 1; // the cell directly below
 
-        if (sandbox.isEmpty(below, col)) { // empty below, so fall straight down
-            fallDown(sandbox, row, col);
-            return; // already moved, don't also slide this frame
-        }
-
         sandbox.side_gravity(row, col); // below is blocked, so try down-left or down-right
 
         if (sandbox.grid[row][col] == null) { // diagonal move worked, this cell is now empty
@@ -92,11 +87,11 @@ class Water extends Elements {
 
 class Fire extends Elements {
     private static final Color[] FLAMES = {
-        new Color(255, 240, 180),
-        new Color(255, 190, 60),
-        new Color(255, 140, 20),
-        new Color(230, 80, 10),
-        new Color(180, 35, 0)
+            new Color(255, 240, 180),
+            new Color(255, 190, 60),
+            new Color(255, 140, 20),
+            new Color(230, 80, 10),
+            new Color(180, 35, 0)
     };
 
     private static final long LIFETIME = 3400;
@@ -134,13 +129,16 @@ class Fire extends Elements {
             float f = (age - (LIFETIME - 1000)) / 1000f;
 
             return new Color(
-                (int) (flame.getRed() + f * (64 - flame.getRed())),
-                (int) (flame.getGreen() + f * (64 - flame.getGreen())),
-                (int) (flame.getBlue() + f * (64 - flame.getBlue()))
-            );
+                    (int) (flame.getRed() + f * (64 - flame.getRed())),
+                    (int) (flame.getGreen() + f * (64 - flame.getGreen())),
+                    (int) (flame.getBlue() + f * (64 - flame.getBlue())));
         }
 
         return flame;
+    }
+
+    public long getAge() {
+        return System.currentTimeMillis() - bornAt;
     }
 }
 

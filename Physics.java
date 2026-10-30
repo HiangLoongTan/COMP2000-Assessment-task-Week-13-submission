@@ -1,8 +1,11 @@
 import java.awt.Color;
 import java.util.function.Predicate;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.concurrent.Executors;
@@ -33,6 +36,7 @@ public class Physics {
     Elements[][] grid;
 
     Tester<Elements> tester = new Tester<>();
+    private final List<Long> completedFireLifespans = new ArrayList<>();
 
     private ScheduledExecutorService simulationExecutor;
     private static final int TICKS_PER_SECOND = 60;
@@ -47,9 +51,10 @@ public class Physics {
 
     public synchronized Map<String, Long> countPixelsByType() {
         return Arrays.stream(grid)
+                .parallel()
                 .flatMap(Arrays::stream)
                 .filter(e -> e != null)
-                .collect(Collectors.groupingBy(
+                .collect(Collectors.groupingByConcurrent(
                         e -> e.getClass().getSimpleName(),
                         Collectors.counting()));
     }
@@ -303,14 +308,41 @@ public class Physics {
         }
     }
 
-    public void FireStep() {
+    public synchronized void FireStep() {
         IntStream.range(0, ROWS)
                 .boxed()
                 .flatMap(row -> IntStream.range(0, COLS)
                         .mapToObj(col -> new int[] { row, col }))
                 .filter(pos -> grid[pos[0]][pos[1]] instanceof Fire fire
                         && deadFire.test(fire))
-                .forEach(pos -> grid[pos[0]][pos[1]] = null);
+                .forEach(pos -> {
+                    Fire fire = (Fire) grid[pos[0]][pos[1]];
+
+                    completedFireLifespans.add(fire.getAge());
+                    grid[pos[0]][pos[1]] = null;
+                });
+    }
+
+    public synchronized double averageFireLifespan() {
+        return completedFireLifespans.stream()
+                .parallel()
+                .collect(Collector.of(
+                        () -> new long[2],
+
+                        (result, age) -> {
+                            result[0] += age;
+                            result[1]++;
+                        },
+
+                        (a, b) -> {
+                            a[0] += b[0];
+                            a[1] += b[1];
+                            return a;
+                        },
+
+                        result -> result[1] == 0
+                                ? 0.0
+                                : (double) result[0] / result[1]));
     }
 
     // Generic tester class
