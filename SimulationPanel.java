@@ -74,13 +74,19 @@ public class SimulationPanel extends JPanel {
 
                     if (element != null) {
 
-                        g.setColor(element.getColor());
-
-                        g.fillRect(
-                                col * s,
-                                row * s,
-                                s,
-                                s);
+                        if (element.transparent) {
+                            Graphics2D g2 = (Graphics2D) g.create();
+                            g2.setComposite(AlphaComposite.SrcOver);
+                            g2.setColor(element.getColor());
+                            g2.fillRect(
+                                col * s, 
+                                row * s, 
+                                s, s);
+                            g2.dispose();
+                        } else {
+                            g.setColor(element.getColor());
+                            g.fillRect(col * s, row * s, s, s);
+                        }
                     }
                 }
             }

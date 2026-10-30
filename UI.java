@@ -70,16 +70,19 @@ public class UI extends JFrame {
         JLabel waterCount = createCountLabel("Water: 0");
         JLabel fireCount = createCountLabel("Fire: 0");
         JLabel gasCount = createCountLabel("Gas: 0");
+        JLabel glassCount = createCountLabel("Glass: 0");
         JLabel totalCount = createCountLabel("Total: 0");
-        JLabel lifespanLabel = new JLabel("Average Fire Lifespan: 0.00 s");
-        lifespanLabel.setForeground(TEXT);
+        JLabel firelifespanLabel = createCountLabel("Average Fire Lifespan:");
+        JLabel firelifespan = createCountLabel("0.00s");
 
         sidePanel.add(sandCount);
         sidePanel.add(waterCount);
         sidePanel.add(fireCount);
         sidePanel.add(gasCount);
+        sidePanel.add(glassCount);
         sidePanel.add(totalCount);
-        sidePanel.add(lifespanLabel);
+        sidePanel.add(firelifespanLabel);
+        sidePanel.add(firelifespan);
 
         // Add Sidebar to Main Layout
         mainPanel.add(sidePanel, BorderLayout.EAST);
@@ -92,19 +95,16 @@ public class UI extends JFrame {
             long water = counts.getOrDefault("Water", 0L);
             long fire = counts.getOrDefault("Fire", 0L);
             long gas = counts.getOrDefault("Gas", 0L);
+            long glass = counts.getOrDefault("Glass", 0L);
             double averageLifespan = sandbox.averageFireLifespan() / 1000.0;
 
             sandCount.setText("Sand: " + sand);
             waterCount.setText("Water: " + water);
             fireCount.setText("Fire: " + fire);
             gasCount.setText("Gas: " + gas);
-            totalCount.setText("Total: " + (sand + water + fire + gas));
-
-            lifespanLabel.setText(
-                String.format(
-                    "Average Fire Lifespan: %.2f s", averageLifespan
-                )
-            );
+            glassCount.setText("Glass: " + glass);
+            totalCount.setText("Total: " + (sand + water + fire + gas + glass));
+            firelifespan.setText("" + averageLifespan);
         });
 
         counterTimer.start();
@@ -128,6 +128,8 @@ public class UI extends JFrame {
         fireButton.addActionListener(e -> sandbox.tester.set(new Fire()));
         JButton gasButton = createButton("Gas", new Color(120, 130, 145));
         gasButton.addActionListener(e -> sandbox.tester.set(new Gas()));
+        JButton glassButton = createButton("Glass", new Color(180, 220, 255));
+        glassButton.addActionListener(e -> sandbox.tester.set(new Glass()));
         JButton clearButton = new JButton("ClearGrid");
         clearButton.addActionListener(e -> {sandbox.clearGrid();});
 
@@ -137,6 +139,7 @@ public class UI extends JFrame {
         bottomPanel.add(waterButton);
         bottomPanel.add(fireButton);
         bottomPanel.add(gasButton);
+        bottomPanel.add(glassButton);
         bottomPanel.add(clearButton);
 
         leftPanel.add(bottomPanel, BorderLayout.SOUTH);

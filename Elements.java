@@ -5,13 +5,14 @@ public class Elements {
     boolean canBurn;
     Color color;
     boolean reverseGravity;
+    boolean transparent;
 
-    public Elements(boolean moveable, boolean canBurn,
-            Color color, boolean reverseGravity) {
+    public Elements(boolean moveable, boolean canBurn, Color color, boolean reverseGravity, Boolean transparent) {
         this.moveable = moveable;
         this.canBurn = canBurn;
         this.color = color;
         this.reverseGravity = reverseGravity;
+        this.transparent = transparent;
     }
 
     public Color getColor() {
@@ -33,7 +34,7 @@ public class Elements {
 
 class Sand extends Elements {
     public Sand() {
-        super(true, false, Color.YELLOW, false);
+        super(true, false, Color.YELLOW, false, false);
     }
 
     @Override
@@ -49,7 +50,7 @@ class Sand extends Elements {
 
 class Water extends Elements {
     public Water() {
-        super(true, false, Color.BLUE, false);
+        super(true, false, Color.BLUE, false, false);
     }
 
     @Override
@@ -98,7 +99,7 @@ class Fire extends Elements {
     private final long bornAt = System.currentTimeMillis(); 
 
     public Fire() {
-        super(false, true, Color.ORANGE, true);
+        super(false, true, Color.ORANGE, true, false);
     }
 
     public boolean isDead() {
@@ -180,7 +181,7 @@ class Explosion extends Fire { //Explosions are very short livedd, so they chain
 
 class Gas extends Elements {
     public Gas() {
-        super(false, true, Color.WHITE, true);
+        super(false, true, Color.WHITE, true, false);
     }
 
     @Override
@@ -191,5 +192,16 @@ class Gas extends Elements {
     @Override
     public void step(Physics physics, int row, int col) {
         physics.floatUp(row, col);
+    }
+}
+
+class Glass extends Elements {
+    public Glass() {
+        super(false, false, new Color(180, 220, 255, 100), false, true);
+    }
+
+    @Override
+    public boolean floatsUp() {
+        return false;
     }
 }
