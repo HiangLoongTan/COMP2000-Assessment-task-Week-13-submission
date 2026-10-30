@@ -1,12 +1,17 @@
 import java.awt.Color;
 import java.util.function.Predicate;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 public class Physics {
@@ -37,23 +42,49 @@ public class Physics {
     Elements[][] grid;
 
     Tester<Elements> tester = new Tester<>();
+    private final List<Long> completedFireLifespans = new ArrayList<>();
+
+    private ScheduledExecutorService simulationExecutor;
+    private static final int TICKS_PER_SECOND = 60;
 
     public Physics() {
         tester.set(new Sand());
         grid = new Elements[ROWS][COLS];
-        grid[20][40] = tester.get();
     }
 
     int frameCounter = 0;
     private boolean reverseOrder = false;
 
-    public Map<String, Long> countPixelsByType() {
+    public synchronized Map<String, Long> countPixelsByType() {
         return Arrays.stream(grid)
+                .parallel()
                 .flatMap(Arrays::stream)
                 .filter(e -> e != null)
-                .collect(Collectors.groupingBy(
+                .collect(Collectors.groupingByConcurrent(
                         e -> e.getClass().getSimpleName(),
                         Collectors.counting()));
+    }
+
+    public void startSimulation(Runnable onTick) {
+        if (simulationExecutor != null && !simulationExecutor.isShutdown()) {
+            return;
+        }
+
+        simulationExecutor = Executors.newSingleThreadScheduledExecutor();
+
+        long tickDuration = 1_000_000_000L / TICKS_PER_SECOND;
+
+        simulationExecutor.scheduleAtFixedRate(() -> {
+            step();
+            onTick.run();
+        }, 0, tickDuration, TimeUnit.NANOSECONDS);
+    }
+
+    public void stopSimulation() {
+        if (simulationExecutor != null) {
+            simulationExecutor.shutdownNow();
+            simulationExecutor = null;
+        }
     }
 
     public boolean isEmpty(int row, int col) { // checks if the square is on the grid
@@ -87,7 +118,7 @@ public class Physics {
         grid[row][col] = null;
     }
 
-    public void clearGrid() {
+    public synchronized void clearGrid() {
         for (int row = 0; row < ROWS; row++) {
             for (int col = 0; col < COLS; col++) {
                 grid[row][col] = null;
@@ -95,7 +126,7 @@ public class Physics {
         }
     }
 
-    public void step() {
+    public synchronized void step() {
         frameCounter++;
         FireStep();
         reactionStep();
@@ -115,6 +146,7 @@ public class Physics {
                 } else if (e != null && falling.test(e)) {
                     e.step(this, row, col);
                 }
+
             }
         }
 
@@ -277,20 +309,47 @@ public class Physics {
                     moveElement(row, col, row, newCol);
                     return;
                 } catch (Exception e) {
-                    System.out.println(e.getMessage());
+                    System.out.println("Water sideways error: " + e.getMessage());
                 }
             }
         }
     }
 
-    public void FireStep() {
+    public synchronized void FireStep() {
         IntStream.range(0, ROWS)
                 .boxed()
                 .flatMap(row -> IntStream.range(0, COLS)
                         .mapToObj(col -> new int[] { row, col }))
                 .filter(pos -> grid[pos[0]][pos[1]] instanceof Fire fire
                         && deadFire.test(fire))
-                .forEach(pos -> grid[pos[0]][pos[1]] = null);
+                .forEach(pos -> {
+                    Fire fire = (Fire) grid[pos[0]][pos[1]];
+
+                    completedFireLifespans.add(fire.getAge());
+                    grid[pos[0]][pos[1]] = null;
+                });
+    }
+
+    public synchronized double averageFireLifespan() {
+        return completedFireLifespans.stream()
+                .parallel()
+                .collect(Collector.of(
+                        () -> new long[2],
+
+                        (result, age) -> {
+                            result[0] += age;
+                            result[1]++;
+                        },
+
+                        (a, b) -> {
+                            a[0] += b[0];
+                            a[1] += b[1];
+                            return a;
+                        },
+
+                        result -> result[1] == 0
+                                ? 0.0
+                                : (double) result[0] / result[1]));
     }
 
     public Stream<Elements> neighbours(int row, int col) { // gives back the elements touching the cell at this row and column

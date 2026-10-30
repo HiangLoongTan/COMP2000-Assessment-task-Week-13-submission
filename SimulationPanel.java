@@ -22,7 +22,7 @@ public class SimulationPanel extends JPanel {
                 if (row >= 0 && row < Physics.ROWS &&
                         col >= 0 && col < Physics.COLS) {
 
-                                        Elements selected = sandbox.tester.get();
+                    Elements selected = sandbox.tester.get();
 
                     // fire needs its own object per pixel so each one burns out on its own timer
                     sandbox.grid[row][col] = (selected instanceof Fire) ? new Fire() : selected;
@@ -47,7 +47,7 @@ public class SimulationPanel extends JPanel {
 
         // Simulation Timer
         Timer timer = new Timer(16, e -> {
-            try{
+            try {
                 sandbox.step();
                 repaint();
             } catch (Exception ex) {
@@ -66,20 +66,22 @@ public class SimulationPanel extends JPanel {
 
         int s = Physics.CELL_SIZE;
 
-        for (int row = 0; row < Physics.ROWS; row++) {
-            for (int col = 0; col < Physics.COLS; col++) {
+        synchronized (sandbox) {
+            for (int row = 0; row < Physics.ROWS; row++) {
+                for (int col = 0; col < Physics.COLS; col++) {
 
-                Elements element = sandbox.grid[row][col];
+                    Elements element = sandbox.grid[row][col];
 
-                if (element != null) {
-                    
-                    g.setColor(element.getColor());
+                    if (element != null) {
 
-                    g.fillRect(
-                            col * s,
-                            row * s,
-                            s,
-                            s);
+                        g.setColor(element.getColor());
+
+                        g.fillRect(
+                                col * s,
+                                row * s,
+                                s,
+                                s);
+                    }
                 }
             }
         }
