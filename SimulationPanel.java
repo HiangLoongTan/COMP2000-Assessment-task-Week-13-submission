@@ -6,6 +6,10 @@ public class SimulationPanel extends JPanel {
 
     Physics sandbox;
 
+    private long lastFpsUpdate = System.nanoTime();
+    private int framesSinceUpdate = 0;
+    private int fps = 0;
+
     public SimulationPanel(Physics sandbox) {
         this.sandbox = sandbox;
 
@@ -66,22 +70,18 @@ public class SimulationPanel extends JPanel {
 
         int s = Physics.CELL_SIZE;
 
+        // Draw all particles
         synchronized (sandbox) {
             for (int row = 0; row < Physics.ROWS; row++) {
                 for (int col = 0; col < Physics.COLS; col++) {
-
                     Elements element = sandbox.grid[row][col];
 
                     if (element != null) {
-
                         if (element.transparent) {
                             Graphics2D g2 = (Graphics2D) g.create();
                             g2.setComposite(AlphaComposite.SrcOver);
                             g2.setColor(element.getColor());
-                            g2.fillRect(
-                                col * s, 
-                                row * s, 
-                                s, s);
+                            g2.fillRect(col * s, row * s, s, s);
                             g2.dispose();
                         } else {
                             g.setColor(element.getColor());
@@ -91,5 +91,24 @@ public class SimulationPanel extends JPanel {
                 }
             }
         }
+
+        // Count rendered frames
+        framesSinceUpdate++;
+
+        long currentTime = System.nanoTime();
+        long elapsed = currentTime - lastFpsUpdate;
+
+        // Update FPS approximately once per second
+        if (elapsed >= 1_000_000_000L) {
+            fps = (int) (framesSinceUpdate
+                    * 1_000_000_000L / elapsed);
+
+            framesSinceUpdate = 0;
+            lastFpsUpdate = currentTime;
+        }
+    }
+
+    public int getFps() {
+        return fps;
     }
 }
