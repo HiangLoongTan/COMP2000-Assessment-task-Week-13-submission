@@ -9,6 +9,7 @@ import javax.swing.border.LineBorder;
 public class UI extends JFrame {
 
     private Physics sandbox;
+    
 
     private final Color BACKGROUND = new Color(30, 33, 40);
     private final Color PANEL_COLOR = new Color(39, 43, 52);
@@ -42,7 +43,7 @@ public class UI extends JFrame {
         simWrapper.setBackground(PANEL_COLOR);
         simWrapper.setBorder(new LineBorder(new Color(65, 71, 83), 1));
 
-        JPanel simPanel = new SimulationPanel(sandbox);
+        SimulationPanel simPanel = new SimulationPanel(sandbox);
         simPanel.setPreferredSize(new Dimension(Physics.WIDTH, Physics.HEIGHT));
         simPanel.setBackground(Color.DARK_GRAY);
 
@@ -74,6 +75,7 @@ public class UI extends JFrame {
         JLabel totalCount = createCountLabel("Total: 0");
         JLabel firelifespanLabel = createCountLabel("Average Fire Lifespan:");
         JLabel firelifespan = createCountLabel("0.00s");
+        JLabel fpsLabel = createCountLabel("FPS: 0");
 
         sidePanel.add(sandCount);
         sidePanel.add(waterCount);
@@ -83,6 +85,7 @@ public class UI extends JFrame {
         sidePanel.add(totalCount);
         sidePanel.add(firelifespanLabel);
         sidePanel.add(firelifespan);
+        sidePanel.add(fpsLabel);
 
         // Add Sidebar to Main Layout
         mainPanel.add(sidePanel, BorderLayout.EAST);
@@ -97,6 +100,7 @@ public class UI extends JFrame {
             long gas = counts.getOrDefault("Gas", 0L);
             long glass = counts.getOrDefault("Glass", 0L);
             double averageLifespan = sandbox.averageFireLifespan() / 1000.0;
+            
 
             sandCount.setText("Sand: " + sand);
             waterCount.setText("Water: " + water);
@@ -105,6 +109,7 @@ public class UI extends JFrame {
             glassCount.setText("Glass: " + glass);
             totalCount.setText("Total: " + (sand + water + fire + gas + glass));
             firelifespan.setText("" + averageLifespan);
+            fpsLabel.setText("FPS: " + simPanel.getFps());
         });
 
         counterTimer.start();
