@@ -391,7 +391,7 @@ public class Physics {
 
     public void reactionStep() { // checks every rule against every cell on the grid
         for (Reaction reaction : reactions) { // we check through each rule, one at a time (which rule am i checking ?)
-            List<int[]> reacting = IntStream.range(0, ROWS) // where do I keep the cells th
+            List<int[]> reacting = IntStream.range(0, ROWS).parallel() // where do I keep the cells th
                     .boxed() // Can I turn these plain numbers into objects ?
                     .flatMap(row -> IntStream.range(0, COLS) // we find what the columns are for this row
                             .mapToObj(col -> new int[] { row, col })) // we find the exact position of each cell
