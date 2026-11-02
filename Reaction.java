@@ -1,3 +1,4 @@
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -19,7 +20,7 @@ public class Reaction { // one chemical rule, for example fire next to gas makes
     public boolean matches(Physics physics, int row, int col) { // does the cell at this row and column react this frame ?
         return reactant.test(physics.grid[row][col]) // am I the kind of cell that can react, for example gas ?
                 && physics.neighbours(row, col).anyMatch(trigger) // is something that sets me off actually touching me ?
-                && Math.random() < chance; // do I win the random roll this frame ?
+                && ThreadLocalRandom.current().nextDouble() < chance; // do I win the random roll this frame ?
     }
 
     public Elements produce() { // creates what the reacting cell becomes
