@@ -17,13 +17,10 @@ import java.util.stream.Stream;
 public class Physics {
 
     List<Reaction> reactions = List.of( // every rule in the simulation, checked in this order
-            new Reaction(e -> e instanceof Fire, e -> e instanceof Gas, 0.25, Explosion::new), // fire next to gas, 25%
-                                                                                               // chance each frame to
-                                                                                               // explode
-            new Reaction(e -> e instanceof Explosion, e -> e instanceof Gas, 0.9, Explosion::new)); // explosion next to
-                                                                                                    // gas, 90% chance,
-                                                                                                    // so the blast
-                                                                                                    // spreads fast
+            new Reaction(e -> e instanceof Fire, e -> e instanceof Gas, 0.25, Explosion::new), 
+            // fire next to gas, 25% chance each frame to explode
+            new Reaction(e -> e instanceof Explosion, e -> e instanceof Gas, 0.9, Explosion::new)); 
+            // explosion next to gas, 90% chance, so the blast spreads fast
 
     // Checks whether an element is a dead fire particle
     Predicate<Fire> deadFire = Fire::isDead;
@@ -229,7 +226,7 @@ public class Physics {
             }
             return;
         }
-
+        // Continuous side movement to ensure the water tries to form a flat level
         if (grid[row][col] instanceof Water) {
             int direction = Math.random() < 0.5 ? -1 : 1;
 
@@ -243,7 +240,7 @@ public class Physics {
                     return;
                 }
             }
-
+            // If pixel next to water element is empty move water to that pixel 
             for (int dir : new int[] { direction, -direction }) {
                 if (isEmpty(row, col + dir)) {
                     try {
@@ -373,7 +370,6 @@ public class Physics {
     }
 
     public Stream<Elements> neighbours(int row, int col) { // gives back the elements touching the cell at this row and
-                                                           // column
 
         return IntStream.rangeClosed(-1, 1) // We start a stream of numbers, offsets for the rows
                 .boxed() // we turn the numbers into objects so flatmap is usable

@@ -9,29 +9,34 @@ public class SimulationPanel extends JPanel {
     private long lastFpsUpdate = System.nanoTime();
     private int framesSinceUpdate = 0;
     private int fps = 0;
+    private int brushSize = 1;
+    private boolean eraseMode = false;
 
     public SimulationPanel(Physics sandbox) {
         this.sandbox = sandbox;
 
         // Converting mouse to pixels and allows us to spawn our material
         MouseAdapter mouse = new MouseAdapter() {
-
             void place(MouseEvent e) {
-
-                int col = e.getX() / Physics.CELL_SIZE;
-                int row = e.getY() / Physics.CELL_SIZE;
-
-                // Collision detection to ensure that we cant click outside of the simulated
-                // enviroment/grid
-                if (row >= 0 && row < Physics.ROWS &&
-                        col >= 0 && col < Physics.COLS) {
-
-                    Elements selected = sandbox.tester.get();
-
-                    // fire needs its own object per pixel so each one burns out on its own timer
-                    sandbox.grid[row][col] = (selected instanceof Fire) ? new Fire() : selected;
-                    repaint();
+                int col = e.getX() / Physics.CELL_SIZE - brushSize / 2;
+                int row = e.getY() / Physics.CELL_SIZE - brushSize / 2;
+                synchronized (sandbox) {
+                    for (int r = 0; r < brushSize; r++) {
+                        for (int c = 0; c < brushSize; c++) {
+                            int newRow = row + r;
+                            int newCol = col + c;
+                            if (newRow >= 0 && newRow < Physics.ROWS && newCol >= 0 && newCol < Physics.COLS) {
+                                if (eraseMode) {
+                                    sandbox.grid[newRow][newCol] = null;
+                                } else {
+                                    Elements selected = sandbox.tester.get();
+                                    sandbox.grid[newRow][newCol] = selected instanceof Fire ? new Fire() : selected;
+                                }
+                            }
+                        }
+                    }
                 }
+                repaint();
             }
 
             // mous events for click and click+drag
@@ -110,5 +115,13 @@ public class SimulationPanel extends JPanel {
 
     public int getFps() {
         return fps;
+    }
+
+    public void setBrushSize(int size) {
+        brushSize = size;
+    }
+
+    public void setEraseMode(boolean erase) {
+        eraseMode = erase;
     }
 }
