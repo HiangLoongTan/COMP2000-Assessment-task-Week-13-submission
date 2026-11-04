@@ -1,3 +1,4 @@
+
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
@@ -10,7 +11,6 @@ public class SimulationPanel extends JPanel {
     private int framesSinceUpdate = 0;
     private int fps = 0;
     private int brushSize = 1;
-    private boolean eraseMode = false;
 
     public SimulationPanel(Physics sandbox) {
         this.sandbox = sandbox;
@@ -26,7 +26,7 @@ public class SimulationPanel extends JPanel {
                             int newRow = row + r;
                             int newCol = col + c;
                             if (newRow >= 0 && newRow < Physics.ROWS && newCol >= 0 && newCol < Physics.COLS) {
-                                if (eraseMode) {
+                                if (sandbox.eraserSelected) {
                                     sandbox.grid[newRow][newCol] = null;
                                 } else {
                                     Elements selected = sandbox.tester.get();
@@ -39,7 +39,6 @@ public class SimulationPanel extends JPanel {
                 repaint();
             }
 
-            // mous events for click and click+drag
             @Override
             public void mousePressed(MouseEvent e) {
                 place(e);
@@ -79,6 +78,7 @@ public class SimulationPanel extends JPanel {
         synchronized (sandbox) {
             for (int row = 0; row < Physics.ROWS; row++) {
                 for (int col = 0; col < Physics.COLS; col++) {
+
                     Elements element = sandbox.grid[row][col];
 
                     if (element != null) {
@@ -121,7 +121,4 @@ public class SimulationPanel extends JPanel {
         brushSize = size;
     }
 
-    public void setEraseMode(boolean erase) {
-        eraseMode = erase;
-    }
 }

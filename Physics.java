@@ -44,6 +44,7 @@ public class Physics {
     Elements[][] grid;
 
     Tester<Elements> tester = new Tester<>();
+    boolean eraserSelected = false;
     private final List<Long> completedFireLifespans = new ArrayList<>();
 
     private ScheduledExecutorService simulationExecutor;
