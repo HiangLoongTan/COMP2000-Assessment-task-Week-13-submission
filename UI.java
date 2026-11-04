@@ -9,7 +9,6 @@ import javax.swing.border.LineBorder;
 public class UI extends JFrame {
 
     private Physics sandbox;
-    
 
     private final Color BACKGROUND = new Color(30, 33, 40);
     private final Color PANEL_COLOR = new Color(39, 43, 52);
@@ -100,7 +99,6 @@ public class UI extends JFrame {
             long gas = counts.getOrDefault("Gas", 0L);
             long glass = counts.getOrDefault("Glass", 0L);
             double averageLifespan = sandbox.averageFireLifespan() / 1000.0;
-            
 
             sandCount.setText("Sand: " + sand);
             waterCount.setText("Water: " + water);
@@ -125,18 +123,57 @@ public class UI extends JFrame {
 
         bottomPanel.add(instructions);
 
+        JLabel brushLabel = createCountLabel("Brush Size: 1");
+
+        JSlider brushSlider = new JSlider(1, 20, 1);
+        brushSlider.setMajorTickSpacing(5);
+        brushSlider.setPaintTicks(true);
+        brushSlider.setPaintLabels(true);
+
+        brushSlider.addChangeListener(e -> {
+            int size = brushSlider.getValue();
+            brushLabel.setText("Brush Size: " + size);
+            simPanel.setBrushSize(size);
+        });
+
+        sidePanel.add(brushLabel);
+        sidePanel.add(brushSlider);
+
         JButton sandButton = createButton("Sand", new Color(210, 174, 55));
-        sandButton.addActionListener(e -> sandbox.tester.set(new Sand()));
+        sandButton.addActionListener(e -> {
+            sandbox.tester.set(new Sand());
+            simPanel.setEraseMode(false);
+        });
         JButton waterButton = createButton("Water", new Color(55, 135, 220));
-        waterButton.addActionListener(e -> sandbox.tester.set(new Water()));
+        waterButton.addActionListener(e -> {
+            sandbox.tester.set(new Water());
+            simPanel.setEraseMode(false);
+        });
         JButton fireButton = createButton("Fire", new Color(220, 95, 50));
-        fireButton.addActionListener(e -> sandbox.tester.set(new Fire()));
+        fireButton.addActionListener(e -> {
+            sandbox.tester.set(new Fire());
+            simPanel.setEraseMode(false);
+        });
         JButton gasButton = createButton("Gas", new Color(120, 130, 145));
-        gasButton.addActionListener(e -> sandbox.tester.set(new Gas()));
+        gasButton.addActionListener(e -> {
+            sandbox.tester.set(new Gas());
+            simPanel.setEraseMode(false);
+        });
         JButton glassButton = createButton("Glass", new Color(180, 220, 255));
-        glassButton.addActionListener(e -> sandbox.tester.set(new Glass()));
+        glassButton.addActionListener(e -> {
+            sandbox.tester.set(new Glass());
+            simPanel.setEraseMode(false);
+        });
+        JButton eraserButton = createButton("Eraser", new Color(65, 35, 100));
+        eraserButton.addActionListener(e -> {
+            simPanel.setEraseMode(true);
+        });
         JButton clearButton = new JButton("ClearGrid");
-        clearButton.addActionListener(e -> {sandbox.clearGrid();});
+        clearButton.addActionListener(e -> {
+            sandbox.clearGrid();
+        });
+
+        sidePanel.add(clearButton);
 
         // Add Buttons to Bottom Bar
 
@@ -145,6 +182,7 @@ public class UI extends JFrame {
         bottomPanel.add(fireButton);
         bottomPanel.add(gasButton);
         bottomPanel.add(glassButton);
+        bottomPanel.add(eraserButton);
         bottomPanel.add(clearButton);
 
         leftPanel.add(bottomPanel, BorderLayout.SOUTH);
