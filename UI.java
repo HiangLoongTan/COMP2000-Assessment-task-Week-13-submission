@@ -114,6 +114,8 @@ public class UI extends JFrame {
         brushSlider.setMajorTickSpacing(5);
         brushSlider.setPaintTicks(true);
         brushSlider.setPaintLabels(true);
+        brushSlider.setBackground(PANEL_COLOR);
+        brushSlider.setForeground(new Color(255, 255, 255));
 
         brushSlider.addChangeListener(e -> {
             int size = brushSlider.getValue();
