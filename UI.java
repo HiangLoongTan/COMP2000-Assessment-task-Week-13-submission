@@ -79,8 +79,15 @@ public class UI extends JFrame {
         statsPanel.add(fpsLabel);
 
         // Buttons
+
+         JButton DrawLines = createButton("Line Editor", new Color(100, 90, 65));
+        DrawLines.addActionListener(e -> sandbox.LinesSelected = true);
+
+
         JButton eraserButton = createButton("Eraser", new Color(90, 90, 100));
         eraserButton.addActionListener(e -> sandbox.eraserSelected = true);
+
+         
 
         JButton clearButton = createButton("Clear Grid", new Color(170, 65, 65));
         clearButton.addActionListener(e -> {
@@ -93,6 +100,7 @@ public class UI extends JFrame {
 
         toolPanel.add(eraserButton);
         toolPanel.add(clearButton);
+        
 
         sidePanel.add(toolPanel, BorderLayout.SOUTH);
 
@@ -143,6 +151,7 @@ public class UI extends JFrame {
         bottomPanel.add(fireButton);
         bottomPanel.add(gasButton);
         bottomPanel.add(glassButton);
+        bottomPanel.add(DrawLines);
 
         mainPanel.add(bottomPanel, BorderLayout.SOUTH);
 
@@ -184,7 +193,12 @@ public class UI extends JFrame {
     private void selectMaterial(Elements element) {
         sandbox.eraserSelected = false;
         sandbox.tester.set(element);
+        sandbox.LinesSelected = false;
+        sandbox.tester.set(element);
+    
     }
+
+   
 
     // Create statistics labels
     private JLabel createCountLabel(String text) {

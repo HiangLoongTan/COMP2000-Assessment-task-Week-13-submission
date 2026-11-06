@@ -11,6 +11,9 @@ public class SimulationPanel extends JPanel {
     private int framesSinceUpdate = 0;
     private int fps = 0;
     private int brushSize = 1;
+    private int startRow;
+    private int startCol;
+    private boolean drawingLine = false;
 
     public SimulationPanel(Physics sandbox) {
         this.sandbox = sandbox;
@@ -39,15 +42,87 @@ public class SimulationPanel extends JPanel {
                 repaint();
             }
 
-            @Override
-            public void mousePressed(MouseEvent e) {
-                place(e);
+       private void drawLine(int row1, int col1, int row2, int col2) {
+
+    int dx = Math.abs(col2 - col1);
+    int dy = Math.abs(row2 - row1);
+
+    int sx = col1 < col2 ? 1 : -1;
+    int sy = row1 < row2 ? 1 : -1;
+
+    int error = dx - dy;
+
+    synchronized (sandbox) {
+
+        while (true) {
+
+            if (row1 >= 0 && row1 < Physics.ROWS &&
+                col1 >= 0 && col1 < Physics.COLS) {
+
+                sandbox.grid[row1][col1] = new Wall();
             }
 
-            @Override
-            public void mouseDragged(MouseEvent e) {
-                place(e);
+            if (row1 == row2 && col1 == col2) {
+                break;
             }
+
+            int e2 = 2 * error;
+
+            if (e2 > -dy) {
+                error -= dy;
+                col1 += sx;
+            }
+
+            if (e2 < dx) {
+                error += dx;
+                row1 += sy;
+            }
+        }
+    }
+
+    repaint();
+
+    
+}
+          @Override
+public void mousePressed(MouseEvent e) {
+
+    if (sandbox.LinesSelected) {
+
+        startCol = e.getX() / Physics.CELL_SIZE;
+        startRow = e.getY() / Physics.CELL_SIZE;
+
+        drawingLine = true;
+
+        drawLine(startRow, startCol, startRow, startCol);
+
+    } else {
+        place(e);
+    }
+}
+
+@Override
+public void mouseDragged(MouseEvent e) {
+
+    if (drawingLine) {
+
+        int currentCol = e.getX() / Physics.CELL_SIZE;
+        int currentRow = e.getY() / Physics.CELL_SIZE;
+
+        drawLine(startRow, startCol, currentRow, currentCol);
+
+        startRow = currentRow;
+        startCol = currentCol;
+
+    } else {
+        place(e);
+    }
+}
+
+@Override
+public void mouseReleased(MouseEvent e) {
+    drawingLine = false;
+}
         };
 
         addMouseListener(mouse);

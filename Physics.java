@@ -1,17 +1,17 @@
 import java.awt.Color;
-import java.util.function.Predicate;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Function;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class Physics {
@@ -45,6 +45,7 @@ public class Physics {
 
     Tester<Elements> tester = new Tester<>();
     boolean eraserSelected = false;
+    boolean LinesSelected = false;
     private final List<Long> completedFireLifespans = new ArrayList<>();
 
     private ScheduledExecutorService simulationExecutor;

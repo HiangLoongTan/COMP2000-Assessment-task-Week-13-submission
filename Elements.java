@@ -205,3 +205,18 @@ class Glass extends Elements {
         return false;
     }
 }
+
+class Wall extends Elements {
+
+public Wall() {
+ super(false, false, Color.GRAY, false, false);
+
+
+}
+
+}
+
+
+
+
+
