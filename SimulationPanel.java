@@ -171,7 +171,7 @@ public void mouseReleased(MouseEvent e) {
                 }
             }
         }
-
+        RealisticRenderer.draw(g, this, sandbox, brushSize); // [NEW] realistic look, drawn on top
         // Count rendered frames
         framesSinceUpdate++;
 
