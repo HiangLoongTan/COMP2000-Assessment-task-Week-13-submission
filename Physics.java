@@ -20,11 +20,10 @@ public class Physics {
             new Reaction(e -> e instanceof Fire, e -> e instanceof Gas, 0.25, Explosion::new),
             // fire next to gas, 25% chance each frame to explode
             new Reaction(e -> e instanceof Explosion, e -> e instanceof Gas, 0.9, Explosion::new),
-    // explosion next to gas, 90% chance, so the blast spreads fast
-    new Reaction(e -> e instanceof Fire, e -> e instanceof Sand, 1, Glass::new)
-    // Fire next to sand, will create glass outlines
-    );
-   
+            // explosion next to gas, 90% chance, so the blast spreads fast
+            new Reaction(e -> e instanceof Fire, e -> e instanceof Sand, 1, Glass::new)
+            // Fire next to sand, will create glass outlines
+    );   
 
     // Checks whether an element is a dead fire particle
     Predicate<Fire> deadFire = Fire::isDead;
@@ -142,14 +141,16 @@ public class Physics {
         // Normal gravity
         for (int row = ROWS - 1; row >= 0; row--) {
             for (int i = 0; i < COLS; i++) {
-                int col = reverseOrder ? COLS - 1 - i : i;
+                int col = (Math.random() < 0.5)
+                        ? i
+                        : COLS - 1 - i;
 
                 Elements e = grid[row][col];
 
                 if (e instanceof Water) {
                     if (!fallStraightDown(row, col)
                             && !flowDiagonally(row, col)) {
-                        spreadSideways(row, col);
+                        spreadWaterSideways(row, col);
                     }
                 } else if (e != null && falling.test(e)) {
                     e.step(this, row, col);
@@ -162,7 +163,9 @@ public class Physics {
         if (frameCounter % 2 == 0) {
             for (int row = 1; row < ROWS; row++) {
                 for (int i = 0; i < COLS; i++) {
-                    int col = reverseOrder ? COLS - 1 - i : i;
+                    int col = (Math.random() < 0.5)
+                            ? i
+                            : COLS - 1 - i;
 
                     Elements e = grid[row][col];
 
@@ -177,48 +180,36 @@ public class Physics {
         reverseOrder = !reverseOrder;
     }
 
-    public void side_gravity(int row, int col) {
-        // There is no space below the bottom row
-        if (row + 1 >= ROWS) {
-            return;
-        }
+    // Sand moves diagonally down when the space below is blocked.
+    public void sideGravity(int row, int col) {
 
         int direction = Math.random() < 0.5 ? -1 : 1;
 
-        // Try the first diagonal direction
-        if (col + direction >= 0 && col + direction < COLS
-                && grid[row + 1][col + direction] == null) {
+        // Try diagonal movement in a random order
+        for (int dir : new int[] { direction, -direction }) {
 
-            grid[row + 1][col + direction] = grid[row][col];
-            grid[row][col] = null;
+            int newRow = row + 1;
+            int newCol = col + dir;
 
-            // Try the opposite diagonal direction
-        } else if (col - direction >= 0 && col - direction < COLS
-                && grid[row + 1][col - direction] == null) {
-
-            grid[row + 1][col - direction] = grid[row][col];
-            grid[row][col] = null;
-        }
-    }
-
-    public void reverse_side_gravity(int row, int col) {
-        int direction = Math.random() < 0.5 ? -1 : 1;
-        // Otherwise, try moving horizontally
-        if (col + direction >= 0 && col + direction < COLS
-                && grid[row][col + direction] == null) {
-            grid[row][col + direction] = grid[row][col];
-            grid[row][col] = null;
-        } else if (col - direction >= 0 && col - direction < COLS
-                && grid[row][col - direction] == null) {
-            grid[row][col - direction] = grid[row][col];
-            grid[row][col] = null;
+            if (isEmpty(newRow, newCol)) {
+                try {
+                    moveElement(row, col, newRow, newCol);
+                } catch (Exception e) {
+                    System.out.println("Sand diagonal error: " + e.getMessage());
+                }
+                return;
+            }
         }
     }
 
     // Normal gravity: particles fall down or diagonally.
     public void fallDown(int row, int col) {
-        // Step 1: Sand try to fall through water
-        if (grid[row][col] instanceof Sand && row + 1 < ROWS && grid[row + 1][col] instanceof Water) {
+
+        // Step 1: Sand falls through water
+        if (grid[row][col] instanceof Sand
+                && row + 1 < ROWS
+                && grid[row + 1][col] instanceof Water) {
+
             swapElements(row, col, row + 1, col);
             return;
         }
@@ -232,10 +223,13 @@ public class Physics {
             }
             return;
         }
-        // Continuous side movement to ensure the water tries to form a flat level
+
+        // Step 3: Water movement
         if (grid[row][col] instanceof Water) {
+
             int direction = Math.random() < 0.5 ? -1 : 1;
 
+            // Try diagonal movement
             for (int dir : new int[] { direction, -direction }) {
                 if (isEmpty(row + 1, col + dir)) {
                     try {
@@ -246,45 +240,65 @@ public class Physics {
                     return;
                 }
             }
-            // If pixel next to water element is empty move water to that pixel
-            for (int dir : new int[] { direction, -direction }) {
-                if (isEmpty(row, col + dir)) {
-                    try {
-                        moveElement(row, col, row, col + dir);
-                    } catch (Exception e) {
-                        System.out.println("Water sideways error: " + e.getMessage());
-                    }
-                    return;
-                }
-            }
+
+            // If diagonal movement is blocked, spread horizontally
+            spreadWaterSideways(row, col);
+
         } else {
-            // Normal gravity for sand and other falling elements
-            side_gravity(row, col);
+
+            // Step 4: Sand and other falling elements
+            sideGravity(row, col);
         }
     }
 
-    // Reverse gravity: particles float up or drift sideways.
+    // Reverse gravity: gas floats upwards and spreads sideways.
     public void floatUp(int row, int col) {
-        // Float up through water and sand
-        if (grid[row][col] instanceof Gas && row > 0) {
+
+        // Gas can pass through water and sand
+        if (row > 0) {
             Elements above = grid[row - 1][col];
-            if (above instanceof Water || above instanceof Sand) {
+
+            if (grid[row][col] instanceof Gas
+                    && (above instanceof Water || above instanceof Sand)) {
                 swapElements(row, col, row - 1, col);
                 return;
             }
         }
 
-        if (Math.random() < 0.6) {
-            reverse_side_gravity(row, col);
-        } else {
-            int above = row - 1;
+        // Try moving straight up
+        if (isEmpty(row - 1, col)) {
+            try {
+                moveElement(row, col, row - 1, col);
+                return;
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
+        }
 
-            if (isEmpty(above, col)) {
-                try {
-                    moveElement(row, col, above, col);
-                } catch (Exception e) {
-                    System.out.println("Reverse gravity error: " + e.getMessage());
+        // Try moving diagonally upwards
+        if (grid[row][col] instanceof Gas) {
+            int direction = Math.random() < 0.5 ? -1 : 1;
+
+            for (int dir : new int[] { direction, -direction }) {
+                int newCol = col + dir;
+
+                if (isEmpty(row - 1, newCol)) {
+                    try {
+                        moveElement(row, col, row - 1, newCol);
+                        return;
+                    } catch (Exception e) {
+                        System.out.println(e.getMessage());
+                    }
                 }
+            }
+
+            // If blocked above, spread horizontally
+            spreadGasSideways(row, col);
+
+        } else {
+            // Other floating elements
+            if (Math.random() < 0.3) {
+                sideGravity(row, col);
             }
         }
     }
@@ -321,49 +335,74 @@ public class Physics {
         return false;
     }
 
-private void spreadSideways(int row, int col) {
+    // Water spreads towards the side with more available space.
+    private void spreadWaterSideways(int row, int col) {
 
-    int leftSpace = 0;
-    int rightSpace = 0;
+        int leftSpace = 0;
+        int rightSpace = 0;
 
-    // Count empty spaces to the left
-    for (int i = 1; i <= 8; i++) {
-        if (isEmpty(row, col - i)) {
-            leftSpace++;
+        // Count empty spaces to the left
+        for (int i = 1; i <= 8; i++) {
+            if (isEmpty(row, col - i)) {
+                leftSpace++;
+            } else {
+                break;
+            }
+        }
+
+        // Count empty spaces to the right
+        for (int i = 1; i <= 8; i++) {
+            if (isEmpty(row, col + i)) {
+                rightSpace++;
+            } else {
+                break;
+            }
+        }
+
+        int direction;
+
+        // Move towards the side with more available space
+        if (leftSpace > rightSpace) {
+            direction = -1;
+        } else if (rightSpace > leftSpace) {
+            direction = 1;
         } else {
-            break;
+            // Random direction if both sides have equal space
+            direction = Math.random() < 0.5 ? -1 : 1;
+        }
+
+        if (isEmpty(row, col + direction)) {
+            try {
+                moveElement(row, col, row, col + direction);
+            } catch (Exception e) {
+                System.out.println("Water sideways error: " + e.getMessage());
+            }
         }
     }
 
-    // Count empty spaces to the right
-    for (int i = 1; i <= 8; i++) {
-        if (isEmpty(row, col + i)) {
-            rightSpace++;
-        } else {
-            break;
+    // Gas spreads randomly to the left or right.
+    private void spreadGasSideways(int row, int col) {
+
+        int direction = Math.random() < 0.5 ? -1 : 1;
+
+        // Try the randomly selected direction
+        if (isEmpty(row, col + direction)) {
+            try {
+                moveElement(row, col, row, col + direction);
+            } catch (Exception e) {
+                System.out.println("Gas sideways error: " + e.getMessage());
+            }
+        }
+
+        // If blocked, try the opposite direction
+        else if (isEmpty(row, col - direction)) {
+            try {
+                moveElement(row, col, row, col - direction);
+            } catch (Exception e) {
+                System.out.println("Gas sideways error: " + e.getMessage());
+            }
         }
     }
-
-    // Move towards the side with more space
-    int direction = 0;
-
-    if (leftSpace > rightSpace) {
-        direction = -1;
-    }
-
-    if (rightSpace > leftSpace) {
-        direction = 1;
-    }
-
-    // If both sides have equal space, don't move
-    if (direction != 0) {
-        try {
-            moveElement(row, col, row, col + direction);
-        } catch (Exception e) {
-            System.out.println("Water sideways error: " + e.getMessage());
-        }
-    }
-}
 
     public synchronized void FireStep() {
         IntStream.range(0, ROWS)
