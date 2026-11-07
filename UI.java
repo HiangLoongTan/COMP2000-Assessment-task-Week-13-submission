@@ -7,6 +7,8 @@ import javax.swing.border.EmptyBorder;
 public class UI extends JFrame {
 
     private Physics sandbox;
+    private CardLayout cardLayout;
+    private JPanel cards;
 
     private final Color BACKGROUND = new Color(30, 33, 40);
     private final Color PANEL_COLOR = new Color(39, 43, 52);
@@ -20,12 +22,18 @@ public class UI extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
 
-        // Main panel
+        // Screen manager
+        cardLayout = new CardLayout();
+        cards = new JPanel(cardLayout);
+
+        cards.setBackground(BACKGROUND);
+
+        setContentPane(cards);
+
+        // Game screen
         JPanel mainPanel = new JPanel(new BorderLayout(10, 0));
         mainPanel.setBackground(BACKGROUND);
         mainPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
-
-        setContentPane(mainPanel);
 
         // Simulation
         SimulationPanel simPanel = new SimulationPanel(sandbox);
@@ -80,14 +88,11 @@ public class UI extends JFrame {
 
         // Buttons
 
-         JButton DrawLines = createButton("Line Editor", new Color(100, 90, 65));
+        JButton DrawLines = createButton("Line Editor", new Color(100, 90, 65));
         DrawLines.addActionListener(e -> sandbox.LinesSelected = true);
-
 
         JButton eraserButton = createButton("Eraser", new Color(90, 90, 100));
         eraserButton.addActionListener(e -> sandbox.eraserSelected = true);
-
-         
 
         JButton clearButton = createButton("Clear Grid", new Color(170, 65, 65));
         clearButton.addActionListener(e -> {
@@ -100,7 +105,6 @@ public class UI extends JFrame {
 
         toolPanel.add(eraserButton);
         toolPanel.add(clearButton);
-        
 
         sidePanel.add(toolPanel, BorderLayout.SOUTH);
 
@@ -183,6 +187,15 @@ public class UI extends JFrame {
 
         counterTimer.start();
 
+        // Adds Menu and Main screen
+        Menu menu = new Menu(() -> cardLayout.show(cards, "GAME"));
+
+        cards.add(menu, "MENU");
+        cards.add(mainPanel, "GAME");
+
+        // Show menu first
+        cardLayout.show(cards, "MENU");
+
         // Window size
         pack();
         setLocationRelativeTo(null);
@@ -195,10 +208,8 @@ public class UI extends JFrame {
         sandbox.tester.set(element);
         sandbox.LinesSelected = false;
         sandbox.tester.set(element);
-    
-    }
 
-   
+    }
 
     // Create statistics labels
     private JLabel createCountLabel(String text) {
