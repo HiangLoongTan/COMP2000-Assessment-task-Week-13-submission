@@ -60,10 +60,6 @@ class Water extends Elements {
 
     @Override
     public void step(Physics sandbox, int row, int col) {
-        int below = row + 1; // the cell directly below
-
-        sandbox.side_gravity(row, col); // below is blocked, so try down-left or down-right
-
         if (sandbox.grid[row][col] == null) { // diagonal move worked, this cell is now empty
             return;
         }
