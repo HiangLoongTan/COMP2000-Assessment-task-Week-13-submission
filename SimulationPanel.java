@@ -42,7 +42,7 @@ public class SimulationPanel extends JPanel {
                 repaint();
             }
 
-       private void drawLine(int row1, int col1, int row2, int col2) {
+      private void drawLine(int row1, int col1, int row2, int col2) {
 
     int dx = Math.abs(col2 - col1);
     int dy = Math.abs(row2 - row1);
@@ -56,10 +56,21 @@ public class SimulationPanel extends JPanel {
 
         while (true) {
 
-            if (row1 >= 0 && row1 < Physics.ROWS &&
-                col1 >= 0 && col1 < Physics.COLS) {
+            // Apply brush size to every point along the line
+            int offset = brushSize / 2;
 
-                sandbox.grid[row1][col1] = new Wall();
+            for (int r = 0; r < brushSize; r++) {
+                for (int c = 0; c < brushSize; c++) {
+
+                    int newRow = row1 + r - offset;
+                    int newCol = col1 + c - offset;
+
+                    if (newRow >= 0 && newRow < Physics.ROWS &&
+                        newCol >= 0 && newCol < Physics.COLS) {
+
+                        sandbox.grid[newRow][newCol] = new Wall();
+                    }
+                }
             }
 
             if (row1 == row2 && col1 == col2) {
@@ -81,8 +92,6 @@ public class SimulationPanel extends JPanel {
     }
 
     repaint();
-
-    
 }
           @Override
 public void mousePressed(MouseEvent e) {
@@ -171,7 +180,7 @@ public void mouseReleased(MouseEvent e) {
                 }
             }
         }
-        RealisticRenderer.draw(g, this, sandbox, brushSize); // [NEW] realistic look, drawn on top
+
         // Count rendered frames
         framesSinceUpdate++;
 
