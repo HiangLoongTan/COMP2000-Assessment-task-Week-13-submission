@@ -17,10 +17,10 @@ import java.util.stream.Stream;
 public class Physics {
 
     List<Reaction> reactions = List.of( // every rule in the simulation, checked in this order
-            new Reaction(e -> e instanceof Fire, e -> e instanceof Gas, 0.25, Explosion::new), 
+            new Reaction(e -> e instanceof Fire, e -> e instanceof Gas, 0.25, Explosion::new),
             // fire next to gas, 25% chance each frame to explode
-            new Reaction(e -> e instanceof Explosion, e -> e instanceof Gas, 0.9, Explosion::new)); 
-            // explosion next to gas, 90% chance, so the blast spreads fast
+            new Reaction(e -> e instanceof Explosion, e -> e instanceof Gas, 0.9, Explosion::new));
+    // explosion next to gas, 90% chance, so the blast spreads fast
 
     // Checks whether an element is a dead fire particle
     Predicate<Fire> deadFire = Fire::isDead;
@@ -199,14 +199,11 @@ public class Physics {
 
     public void reverse_side_gravity(int row, int col) {
         int direction = Math.random() < 0.5 ? -1 : 1;
-        // Otherwise, try moving horizontally
-        if (col + direction >= 0 && col + direction < COLS
-                && grid[row][col + direction] == null) {
-            grid[row][col + direction] = grid[row][col];
-            grid[row][col] = null;
-        } else if (col - direction >= 0 && col - direction < COLS
-                && grid[row][col - direction] == null) {
-            grid[row][col - direction] = grid[row][col];
+
+        int newCol = col + direction;
+
+        if (newCol >= 0 && newCol < COLS && grid[row][newCol] == null) {
+            grid[row][newCol] = grid[row][col];
             grid[row][col] = null;
         }
     }
@@ -242,7 +239,7 @@ public class Physics {
                     return;
                 }
             }
-            // If pixel next to water element is empty move water to that pixel 
+            // If pixel next to water element is empty move water to that pixel
             for (int dir : new int[] { direction, -direction }) {
                 if (isEmpty(row, col + dir)) {
                     try {
@@ -261,7 +258,7 @@ public class Physics {
 
     // Reverse gravity: particles float up or drift sideways.
     public void floatUp(int row, int col) {
-        //Float up through water and sand
+        // Float up through water and sand
         if (grid[row][col] instanceof Gas && row > 0) {
             Elements above = grid[row - 1][col];
             if (above instanceof Water || above instanceof Sand) {
@@ -270,7 +267,7 @@ public class Physics {
             }
         }
 
-        if (Math.random() < 0.6) {
+        if (Math.random() < 0.3) {
             reverse_side_gravity(row, col);
         } else {
             int above = row - 1;
