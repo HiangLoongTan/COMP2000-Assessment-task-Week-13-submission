@@ -138,7 +138,9 @@ public class Physics {
         // Normal gravity
         for (int row = ROWS - 1; row >= 0; row--) {
             for (int i = 0; i < COLS; i++) {
-                int col = reverseOrder ? COLS - 1 - i : i;
+                int col = (Math.random() < 0.5)
+                        ? i
+                        : COLS - 1 - i;
 
                 Elements e = grid[row][col];
 
@@ -158,7 +160,9 @@ public class Physics {
         if (frameCounter % 2 == 0) {
             for (int row = 1; row < ROWS; row++) {
                 for (int i = 0; i < COLS; i++) {
-                    int col = reverseOrder ? COLS - 1 - i : i;
+                    int col = (Math.random() < 0.5)
+                            ? i
+                            : COLS - 1 - i;
 
                     Elements e = grid[row][col];
 
@@ -173,37 +177,27 @@ public class Physics {
         reverseOrder = !reverseOrder;
     }
 
-    public void side_gravity(int row, int col) {
-        // There is no space below the bottom row
-        if (row + 1 >= ROWS) {
+    public void sideGravity(int row, int col) {
+        // Only attempt horizontal movement 50% of the time
+        if (Math.random() < 0.5) {
             return;
         }
 
         int direction = Math.random() < 0.5 ? -1 : 1;
 
-        // Try the first diagonal direction
-        if (col + direction >= 0 && col + direction < COLS
-                && grid[row + 1][col + direction] == null) {
+        int firstCol = col + direction;
+        int secondCol = col - direction;
 
-            grid[row + 1][col + direction] = grid[row][col];
+        if (firstCol >= 0 && firstCol < COLS
+                && grid[row][firstCol] == null) {
+
+            grid[row][firstCol] = grid[row][col];
             grid[row][col] = null;
 
-            // Try the opposite diagonal direction
-        } else if (col - direction >= 0 && col - direction < COLS
-                && grid[row + 1][col - direction] == null) {
+        } else if (secondCol >= 0 && secondCol < COLS
+                && grid[row][secondCol] == null) {
 
-            grid[row + 1][col - direction] = grid[row][col];
-            grid[row][col] = null;
-        }
-    }
-
-    public void reverse_side_gravity(int row, int col) {
-        int direction = Math.random() < 0.5 ? -1 : 1;
-
-        int newCol = col + direction;
-
-        if (newCol >= 0 && newCol < COLS && grid[row][newCol] == null) {
-            grid[row][newCol] = grid[row][col];
+            grid[row][secondCol] = grid[row][col];
             grid[row][col] = null;
         }
     }
@@ -252,7 +246,7 @@ public class Physics {
             }
         } else {
             // Normal gravity for sand and other falling elements
-            side_gravity(row, col);
+            sideGravity(row, col);
         }
     }
 
@@ -268,16 +262,12 @@ public class Physics {
         }
 
         if (Math.random() < 0.3) {
-            reverse_side_gravity(row, col);
-        } else {
-            int above = row - 1;
-
-            if (isEmpty(above, col)) {
-                try {
-                    moveElement(row, col, above, col);
-                } catch (Exception e) {
-                    System.out.println("Reverse gravity error: " + e.getMessage());
-                }
+            sideGravity(row, col);
+        } else if (isEmpty(row - 1, col)) {
+            try {
+                moveElement(row, col, row - 1, col);
+            } catch (Exception e) {
+                System.out.println("Reverse gravity error: " + e.getMessage());
             }
         }
     }
