@@ -17,10 +17,10 @@ import java.util.stream.Stream;
 public class Physics {
 
     List<Reaction> reactions = List.of( // every rule in the simulation, checked in this order
-            new Reaction(e -> e instanceof Fire, e -> e instanceof Gas, 0.25, Explosion::new), 
+            new Reaction(e -> e instanceof Fire, e -> e instanceof Gas, 0.25, Explosion::new),
             // fire next to gas, 25% chance each frame to explode
-            new Reaction(e -> e instanceof Explosion, e -> e instanceof Gas, 0.9, Explosion::new)); 
-            // explosion next to gas, 90% chance, so the blast spreads fast
+            new Reaction(e -> e instanceof Explosion, e -> e instanceof Gas, 0.9, Explosion::new));
+    // explosion next to gas, 90% chance, so the blast spreads fast
 
     // Checks whether an element is a dead fire particle
     Predicate<Fire> deadFire = Fire::isDead;
@@ -242,7 +242,7 @@ public class Physics {
                     return;
                 }
             }
-            // If pixel next to water element is empty move water to that pixel 
+            // If pixel next to water element is empty move water to that pixel
             for (int dir : new int[] { direction, -direction }) {
                 if (isEmpty(row, col + dir)) {
                     try {
@@ -261,7 +261,7 @@ public class Physics {
 
     // Reverse gravity: particles float up or drift sideways.
     public void floatUp(int row, int col) {
-        //Float up through water and sand
+        // Float up through water and sand
         if (grid[row][col] instanceof Gas && row > 0) {
             Elements above = grid[row - 1][col];
             if (above instanceof Water || above instanceof Sand) {
@@ -317,22 +317,49 @@ public class Physics {
         return false;
     }
 
-    private void spreadSideways(int row, int col) {
-        int direction = Math.random() < 0.5 ? -1 : 1;
+private void spreadSideways(int row, int col) {
 
-        for (int dir : new int[] { direction, -direction }) {
-            int newCol = col + dir;
+    int leftSpace = 0;
+    int rightSpace = 0;
 
-            if (isEmpty(row, newCol)) {
-                try {
-                    moveElement(row, col, row, newCol);
-                    return;
-                } catch (Exception e) {
-                    System.out.println("Water sideways error: " + e.getMessage());
-                }
-            }
+    // Count empty spaces to the left
+    for (int i = 1; i <= 8; i++) {
+        if (isEmpty(row, col - i)) {
+            leftSpace++;
+        } else {
+            break;
         }
     }
+
+    // Count empty spaces to the right
+    for (int i = 1; i <= 8; i++) {
+        if (isEmpty(row, col + i)) {
+            rightSpace++;
+        } else {
+            break;
+        }
+    }
+
+    // Move towards the side with more space
+    int direction = 0;
+
+    if (leftSpace > rightSpace) {
+        direction = -1;
+    }
+
+    if (rightSpace > leftSpace) {
+        direction = 1;
+    }
+
+    // If both sides have equal space, don't move
+    if (direction != 0) {
+        try {
+            moveElement(row, col, row, col + direction);
+        } catch (Exception e) {
+            System.out.println("Water sideways error: " + e.getMessage());
+        }
+    }
+}
 
     public synchronized void FireStep() {
         IntStream.range(0, ROWS)
