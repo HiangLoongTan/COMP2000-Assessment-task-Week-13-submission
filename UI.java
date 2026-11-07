@@ -157,6 +157,26 @@ public class UI extends JFrame {
         bottomPanel.add(glassButton);
         bottomPanel.add(DrawLines);
 
+        for (Component c : bottomPanel.getComponents()) {
+            if (c instanceof JButton b) {
+                Color colour = b.getBackground(); // the colour the team gave this button
+                b.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(colour, 2), new EmptyBorder(7, 16, 7, 16)));
+                b.setUI(new javax.swing.plaf.basic.BasicButtonUI()); // same look on Mac and Windows
+                b.setBackground(BACKGROUND); // dark inside the box
+                b.addActionListener(e -> { // when clicked: empty every box, then fill this one
+                    for (Component other : bottomPanel.getComponents()) {
+                        if (other instanceof JButton) {
+                            other.setBackground(BACKGROUND);
+                            other.setForeground(Color.WHITE);
+                        }
+                    }
+                    b.setBackground(colour); // solid colour
+                    boolean veryLight = colour.getRed() + colour.getGreen() + colour.getBlue() > 550;
+                    b.setForeground(veryLight ? Color.BLACK : Color.WHITE); // keep text readable
+                });
+            }
+        }
         mainPanel.add(bottomPanel, BorderLayout.SOUTH);
 
         // Update statistics

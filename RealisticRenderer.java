@@ -1,8 +1,7 @@
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
-// [NEW FILE] Draws the simulation with realistic colours, fire glow and a brush outline.
-// SimulationPanel only needs one extra line to use this, so the team's code stays the same.
+
 public class RealisticRenderer {
 
     // one pixel per grid cell, stretched up to the panel size when drawn
